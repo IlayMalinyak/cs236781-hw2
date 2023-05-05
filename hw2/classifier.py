@@ -188,7 +188,12 @@ def plot_decision_boundary_2d(
     #  plot a contour map.
     x1_grid, x2_grid, y_hat = None, None, None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    x1_grid, x2_grid = torch.meshgrid(
+        torch.arange(x[:, 0].min(), x[:, 0].max(), step=dx),
+        torch.arange(x[:, 1].min(), x[:, 1].max(), step=dx),
+    )
+    x_grid = torch.stack((x1_grid.flatten(), x2_grid.flatten()), dim=1)
+    y_hat = classifier.classify(x_grid).reshape(x1_grid.shape)
     # ========================
 
     # Plot the decision boundary as a filled contour
@@ -222,7 +227,14 @@ def select_roc_thresh(
     fpr, tpr, thresh = None, None, None
     optimal_theresh_idx, optimal_thresh = None, None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # Calculate ROC curve
+    y_scores = classifier.predict_proba(x)[:,1]
+    
+    fpr, tpr, thresh = roc_curve(y.numpy(), y_scores.detach().numpy())
+
+    # Find optimal threshold
+    optimal_thresh_idx = (tpr - fpr).argmax()
+    optimal_thresh = thresh[optimal_thresh_idx]
     # ========================
 
     if plot:

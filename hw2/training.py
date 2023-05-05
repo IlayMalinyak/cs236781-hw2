@@ -83,7 +83,19 @@ class Trainer(abc.ABC):
             #  - Use the train/test_epoch methods.
             #  - Save losses and accuracies in the lists above.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            train_result = self.train_epoch(dl_train)
+            t_loss, t_acc = train_result.losses, train_result.accuracy
+            # print(t_loss, t_acc)
+            train_loss.append(sum(t_loss)/len(dl_train))
+            train_acc.append(t_acc.item())
+            
+            
+            test_result = self.test_epoch(dl_test)
+            t_loss, t_acc = test_result.losses, test_result.accuracy
+            test_loss.append(sum(t_loss)/len(dl_train))
+            test_acc.append(t_acc.item())
+            actual_num_epochs += 1
+            
             # ========================
 
             # TODO:
@@ -94,11 +106,14 @@ class Trainer(abc.ABC):
             #    the checkpoints argument.
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
-                raise NotImplementedError()
+                self.save_checkpoint(f"./model_{type(self.model).__name__}.pth")
+                epochs_without_improvement = 0
                 # ========================
             else:
                 # ====== YOUR CODE: ======
-                raise NotImplementedError()
+                epochs_without_improvement += 1
+                if epochs_without_improvement == early_stopping:
+                    break
                 # ========================
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)
@@ -257,7 +272,15 @@ class ClassifierTrainer(Trainer):
         #  - Update parameters
         #  - Classify and calculate number of correct predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        output = self.model(X)
+        loss = self.loss_fn(output, y)
+        loss.backward()
+        self.optimizer.step()
+        
+        batch_loss = loss.item()
+        c = self.model.classify(X)
+        num_correct = (c == y).sum()
         # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -277,7 +300,11 @@ class ClassifierTrainer(Trainer):
             #  - Forward pass
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            output = self.model(X)
+            loss = self.loss_fn(output, y)
+            batch_loss = loss.item()
+            c = self.model.classify(X)
+            num_correct = (c == y).sum()
             # ========================
 
         return BatchResult(batch_loss, num_correct)
