@@ -22,7 +22,17 @@ class Classifier(nn.Module, ABC):
 
         # TODO: Add any additional initializations here, if you need them.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        layers_list = next(model.children())
+        self.body = layers_list[:-1]
+        self.head = nn.Softmax(dim=1)
+
+        # print("layers: ", layers_list)
+        # for i, layer in enumerate(layers):
+        #     print("hiiiii", i, layer)
+        #     if i != len(layers_list) - 1:
+        #         print(layer)
+        #         self.body.append(layer)
+        # self.head = next(model.children())
         # ========================
 
     def forward(self, x: Tensor) -> Tensor:
@@ -30,11 +40,12 @@ class Classifier(nn.Module, ABC):
         :param x: (N, D) input tensor, N samples with D features
         :returns: (N, C) i.e. C class scores for each of N samples
         """
-        z: Tensor = None
+        z: Tensor = x
 
         # TODO: Implement the forward pass, returning raw scores from the wrapped model.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for layer in self.body:      
+            z = self.model(x)
         # ========================
         assert z.shape[0] == x.shape[0] and z.ndim == 2, "raw scores should be (N, C)"
         return z
@@ -47,7 +58,7 @@ class Classifier(nn.Module, ABC):
         """
         # TODO: Calcualtes class scores for each sample.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        z = self.forward(x)
         # ========================
         return self.predict_proba_scores(z)
 
@@ -59,7 +70,7 @@ class Classifier(nn.Module, ABC):
         """
         # TODO: Calculate class probabilities for the input.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return self.head(z)
         # ========================
 
     def classify(self, x: Tensor) -> Tensor:
@@ -128,7 +139,7 @@ class BinaryClassifier(Classifier):
         #  greater or equal to the threshold.
         #  Output should be a (N,) integer tensor.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return  (y_proba[:, self.positive_class] > self.threshold).to(torch.int32)
         # ========================
 
 

@@ -44,6 +44,7 @@ class MLP(nn.Module):
             dict, or instances of nn.Module (e.g. an instance of nn.ReLU()).
             Length should match 'dims'.
         """
+        super().__init__()
         assert len(nonlins) == len(dims)
         self.in_dim = in_dim
         self.out_dim = dims[-1]
@@ -55,7 +56,13 @@ class MLP(nn.Module):
         #  - Either instantiate the activations based on their name or use the provided
         #    instances.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        layers = []
+        for h_d, activ in zip(dims, nonlins):
+            layers.append(nn.Linear(in_dim, h_d))
+            activation  = ACTIVATIONS[activ]() if isinstance(activ, str) else activ
+            layers.append(activation)
+            in_dim = h_d
+        self.layers = torch.nn.ModuleList(layers)
         # ========================
 
     def forward(self, x: Tensor) -> Tensor:
@@ -66,5 +73,7 @@ class MLP(nn.Module):
         # TODO: Implement the model's forward pass. Make sure the input and output
         #  shapes are as expected.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for l in self.layers:
+            x = l(x)
+        return x
         # ========================
