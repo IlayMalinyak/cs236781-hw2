@@ -45,7 +45,39 @@ def mlp_experiment(
     #  Note: use print_every=0, verbose=False, plot=False where relevant to prevent
     #  output from this function.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    
+    n_layers = depth  # number of layers (not including output)
+    hidden_dims = 512  # number of output dimensions for each hidden layer
+    activation = "relu"  # activation function to apply after each hidden layer
+    out_activation = "softmax"  # activation function to apply at the output layer
+    loss_fn = torch.nn.CrossEntropyLoss()  # One of the torch.nn losses
+    hp_arch= dict(
+        n_layers=n_layers,
+        hidden_dims=hidden_dims,
+        activation=activation,
+        out_activation=out_activation,
+    )
+    
+    lr, weight_decay, momentum = 0.1, 0.001, 0.1  # Arguments for SGD optimizer
+    hp_optim = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, loss_fn=loss_fn)
+
+    model = BinaryClassifier(
+    model=MLP(
+        in_dim=2,
+        dims=[*[hp_arch['hidden_dims'],]*hp_arch['n_layers'], 2],
+        nonlins=[*[hp_arch['activation'],]*hp_arch['n_layers'], hp_arch['out_activation']]
+    ),
+    threshold=0.5,)
+    loss_fn = hp_optim.pop('loss_fn')
+    optimizer = torch.optim.SGD(params=model.parameters(), **hp_optim)
+    trainer = ClassifierTrainer(model, loss_fn, optimizer)
+
+    fit_result = trainer.fit(dl_train, dl_valid, num_epochs=n_epochs, print_every=0, verbose=False, early_stopping=2)
+    optimal_thresh = select_roc_thresh(model, *dl_valid.dataset.tensors, plot=False)
+        
+    model.threshold = optimal_thresh
+    epoch_result = trainer.test_epoch(dl_test)
+    return model, optimal_thresh, fit_result.test_acc[-1], epoch_result.accuracy
     # ========================
     return model, thresh, valid_acc, test_acc
 

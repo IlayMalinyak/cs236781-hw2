@@ -144,8 +144,8 @@ An equation: $e^{i\pi} -1 = 0$
 
 
 def part3_arch_hp():
-    n_layers = 4  # number of layers (not including output)
-    hidden_dims = 512  # number of output dimensions for each hidden layer
+    n_layers = 2  # number of layers (not including output)
+    hidden_dims = 1024  # number of output dimensions for each hidden layer
     activation = "relu"  # activation function to apply after each hidden layer
     out_activation = "softmax"  # activation function to apply at the output layer
     # TODO: Tweak the MLP architecture hyperparameters.
@@ -165,7 +165,7 @@ def part3_optim_hp():
     import torch.nn.functional
 
     loss_fn = torch.nn.CrossEntropyLoss()  # One of the torch.nn losses
-    lr, weight_decay, momentum = 0.002, 0.0005, 0.0005  # Arguments for SGD optimizer
+    lr, weight_decay, momentum = 0.1, 0.001, 0.1  # Arguments for SGD optimizer
     # TODO:
     #  - Tweak the Optimizer hyperparameters.
     #  - Choose the appropriate loss function for your architecture.

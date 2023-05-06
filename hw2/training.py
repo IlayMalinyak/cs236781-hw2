@@ -87,13 +87,13 @@ class Trainer(abc.ABC):
             t_loss, t_acc = train_result.losses, train_result.accuracy
             # print(t_loss, t_acc)
             train_loss.append(sum(t_loss)/len(dl_train))
-            train_acc.append(t_acc.item())
+            train_acc.append(t_acc)
             
             
             test_result = self.test_epoch(dl_test)
             t_loss, t_acc = test_result.losses, test_result.accuracy
-            test_loss.append(sum(t_loss)/len(dl_train))
-            test_acc.append(t_acc.item())
+            test_loss.append(sum(t_loss)/len(dl_test))
+            test_acc.append(t_acc)
             actual_num_epochs += 1
             
             # ========================
@@ -106,6 +106,11 @@ class Trainer(abc.ABC):
             #    the checkpoints argument.
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
+                best_acc = test_result.accuracy
+                # train_loss.append(sum(t_loss)/len(dl_train))
+                # train_acc.append(t_acc.item())
+                # test_loss.append(sum(t_loss)/len(dl_test))
+                # test_acc.append(t_acc.item())
                 self.save_checkpoint(f"./model_{type(self.model).__name__}.pth")
                 epochs_without_improvement = 0
                 # ========================
@@ -113,6 +118,7 @@ class Trainer(abc.ABC):
                 # ====== YOUR CODE: ======
                 epochs_without_improvement += 1
                 if epochs_without_improvement == early_stopping:
+                    "early stopping!"
                     break
                 # ========================
 
@@ -279,8 +285,8 @@ class ClassifierTrainer(Trainer):
         self.optimizer.step()
         
         batch_loss = loss.item()
-        c = self.model.classify(X)
-        num_correct = (c == y).sum()
+        num_correct = (output.argmax(dim=1) == y).sum().item()
+
         # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -303,8 +309,8 @@ class ClassifierTrainer(Trainer):
             output = self.model(X)
             loss = self.loss_fn(output, y)
             batch_loss = loss.item()
-            c = self.model.classify(X)
-            num_correct = (c == y).sum()
+            num_correct = (output.argmax(dim=1) == y).sum().item()
+
             # ========================
 
         return BatchResult(batch_loss, num_correct)
