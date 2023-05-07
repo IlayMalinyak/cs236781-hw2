@@ -25,14 +25,6 @@ class Classifier(nn.Module, ABC):
         layers_list = next(model.children())
         self.body = layers_list[:-1]
         self.head = nn.Softmax(dim=1)
-
-        # print("layers: ", layers_list)
-        # for i, layer in enumerate(layers):
-        #     print("hiiiii", i, layer)
-        #     if i != len(layers_list) - 1:
-        #         print(layer)
-        #         self.body.append(layer)
-        # self.head = next(model.children())
         # ========================
 
     def forward(self, x: Tensor) -> Tensor:
@@ -43,9 +35,8 @@ class Classifier(nn.Module, ABC):
         z: Tensor = x
 
         # TODO: Implement the forward pass, returning raw scores from the wrapped model.
-        # ====== YOUR CODE: ======
-        for layer in self.body:      
-            z = self.model(x)
+        # ====== YOUR CODE: ======    
+        z = self.model(x)
         # ========================
         assert z.shape[0] == x.shape[0] and z.ndim == 2, "raw scores should be (N, C)"
         return z
@@ -107,7 +98,7 @@ class ArgMaxClassifier(Classifier):
         #  Classify each sample to one of C classes based on the highest score.
         #  Output should be a (N,) integer tensor.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return torch.argmax(y_proba, dim=1)
         # ========================
 
 

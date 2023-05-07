@@ -107,10 +107,6 @@ class Trainer(abc.ABC):
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
                 best_acc = test_result.accuracy
-                # train_loss.append(sum(t_loss)/len(dl_train))
-                # train_acc.append(t_acc.item())
-                # test_loss.append(sum(t_loss)/len(dl_test))
-                # test_acc.append(t_acc.item())
                 self.save_checkpoint(f"./model_{type(self.model).__name__}.pth")
                 epochs_without_improvement = 0
                 # ========================
