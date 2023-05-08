@@ -60,6 +60,7 @@ class CNN(nn.Module):
         self.activation_params = activation_params
         self.pooling_type = pooling_type
         self.pooling_params = pooling_params
+        self.out_features_size = in_size
 
         if activation_type not in ACTIVATIONS or pooling_type not in POOLINGS:
             raise ValueError("Unsupported activation or pooling type")
@@ -100,20 +101,16 @@ class CNN(nn.Module):
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-            size = torch.tensor(self.in_size)[1:]
-            for l in self.feature_extractor:
-                name = type(l).__name__
-                if "Conv" in name or "Pool" in name:
-                    s,p,k = torch.tensor(l.stride), torch.tensor(l.padding), torch.tensor(l.kernel_size)
-                    size += 2*p - (k-1) - 1
-                    size = torch.floor(size/s + 1).to(torch.int64)
-            return self.channels[-1]*size[0]*size[1]
-                
-                
-                           
+            
+            dummy_input = torch.randn(1, *self.in_size)
+            output = self.feature_extractor(dummy_input)
+            n_features = output.numel() // output.shape[0]  
+            return n_features 
             # ========================
         finally:
             torch.set_rng_state(rng_state)
+
+        
 
     def _make_mlp(self):
         # TODO:
@@ -280,11 +277,12 @@ class ResidualBottleneckBlock(ResidualBlock):
         #  Initialize the base class in the right way to produce the bottleneck block
         #  architecture.
         # ====== YOUR CODE: ======
-        inner_channels.append(in_out_channels)
-        inner_channels.insert(0,inner_channels[0]) 
+        channels = inner_channels[::]
+        channels.append(in_out_channels)
+        channels.insert(0,inner_channels[0]) 
         inner_kernel_sizes.insert(0,1)
         inner_kernel_sizes.append(1)
-        super().__init__(in_channels=in_out_channels, channels=inner_channels, kernel_sizes=inner_kernel_sizes, **kwargs)
+        super().__init__(in_channels=in_out_channels, channels=channels, kernel_sizes=inner_kernel_sizes, **kwargs)
         # ========================
 
 
@@ -314,6 +312,7 @@ class ResNet(CNN):
         )
 
     def _make_feature_extractor(self):
+        
         in_channels, in_h, in_w, = tuple(self.in_size)
 
         layers = []
@@ -333,15 +332,27 @@ class ResNet(CNN):
         #    2 + len(inner_channels). [1 for each 1X1 proection convolution] + [# inner convolutions].
         # - Use batchnorm and dropout as requested.
         # ====== YOUR CODE: ======
-        in_channels = self.in_size[0]
-        for i in range(len(self.channels)):
-            if not bottelneck:
-                layers.append(ResidualBlock())
-            layers.append(ACTIVATIONS[self.activation_type](**self.activation_params))
-            if i > 0 and ((i+1) % self.pool_every == 0):
-                layers.append(POOLINGS[self.pooling_type](**self.pooling_params))
-            in_channels = self.channels[i]
-        # ========================
+        cur_idx = 0
+        while cur_idx < len(self.channels):
+            next_idx = (cur_idx+self.pool_every) % len(self.channels)
+            if next_idx < self.pool_every:
+                next_idx = len(self.channels)
+            # print(next_idx)
+            block_channels = self.channels[cur_idx:next_idx]
+            block_kernels = [3]*len(block_channels)
+            # print(block_channels)
+            if not self.bottleneck:
+                block = ResidualBlock(in_channels, block_channels, block_kernels, self.batchnorm, self.dropout, self.activation_type,
+                                     self.activation_params)
+                in_channels = block_channels[-1]
+            else:
+                block = ResidualBottleneckBlock(in_channels, block_channels, block_kernels, batchnorm=self.batchnorm, dropout=self.dropout,
+                                                activation_type=self.activation_type, activation_params=self.activation_params)
+            layers.append(block)
+            if next_idx - cur_idx == self.pool_every:
+                layers.append(POOLINGS[self.pooling_type](**self.pooling_params)) 
+            cur_idx += self.pool_every
         seq = nn.Sequential(*layers)
         return seq
-
+        
+        
