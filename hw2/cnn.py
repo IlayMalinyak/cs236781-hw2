@@ -211,9 +211,9 @@ class ResidualBlock(nn.Module):
                 padding=kernel_sizes[i] // 2,
                 bias=True,
             ))
-            if dropout > 0:
+            if dropout > 0 and (i < len(channels) - 1):
                 main_layers.append(nn.Dropout2d(p=dropout))
-            if batchnorm:
+            if batchnorm and i < len(channels) - 1:
                 main_layers.append(nn.BatchNorm2d(channels[i]))
             if i < len(channels) - 1:
                 main_layers.append(ACTIVATIONS[activation_type](**activation_params))
@@ -280,7 +280,11 @@ class ResidualBottleneckBlock(ResidualBlock):
         #  Initialize the base class in the right way to produce the bottleneck block
         #  architecture.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        inner_channels.append(in_out_channels)
+        inner_channels.insert(0,inner_channels[0]) 
+        inner_kernel_sizes.insert(0,1)
+        inner_kernel_sizes.append(1)
+        super().__init__(in_channels=in_out_channels, channels=inner_channels, kernel_sizes=inner_kernel_sizes, **kwargs)
         # ========================
 
 
@@ -329,7 +333,14 @@ class ResNet(CNN):
         #    2 + len(inner_channels). [1 for each 1X1 proection convolution] + [# inner convolutions].
         # - Use batchnorm and dropout as requested.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        in_channels = self.in_size[0]
+        for i in range(len(self.channels)):
+            if not bottelneck:
+                layers.append(ResidualBlock())
+            layers.append(ACTIVATIONS[self.activation_type](**self.activation_params))
+            if i > 0 and ((i+1) % self.pool_every == 0):
+                layers.append(POOLINGS[self.pooling_type](**self.pooling_params))
+            in_channels = self.channels[i]
         # ========================
         seq = nn.Sequential(*layers)
         return seq
