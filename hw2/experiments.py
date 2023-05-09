@@ -27,6 +27,10 @@ MODEL_TYPES = {
     "resnet": ResNet,
 }
 
+OPTIMIZERS = {'SGD': torch.optim.SGD, 'ADAM': torch.optim.Adam}
+LOSSES = {"cross entropy":torch.nn.CrossEntropyLoss}
+
+
 
 def mlp_experiment(
     depth: int,
@@ -117,9 +121,10 @@ def cnn_experiment(
     batchnorm=True,
     dropout=0.1,
     bottleneck=False,
-    loss_fn = torch.nn.CrossEntropyLoss(),
-    optimizer = torch.optim.SGD,
-    hp_optim = dict(momentum=0.001)
+    loss_fn = "cross entropy",
+    optimizer = "SGD",
+    hp_optim = dict(momentum=0.001),
+    subset=False
 ):
     """
     Executes a single run of a Part3 experiment with a single configuration.
@@ -137,6 +142,11 @@ def cnn_experiment(
     tf = torchvision.transforms.ToTensor()
     ds_train = CIFAR10(root=DATA_DIR, download=True, train=True, transform=tf)
     ds_test = CIFAR10(root=DATA_DIR, download=True, train=False, transform=tf)
+    if subset:
+        train_idx = list(range(0, subset))
+        test_idx = list(range(0, subset//4))
+        ds_train = torch.utils.data.Subset(ds_train, train_idx)
+        ds_test = torch.utils.data.Subset(ds_test, test_idx)
 
     if not device:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -176,15 +186,15 @@ def cnn_experiment(
     model=model_cls(**net_params)
     )
     
-    x = torch.randn(1, *sample_shape)
-    display(make_dot(model(x), params=dict(model.named_parameters())))
+    # x = torch.randn(1, *sample_shape)
+    # display(make_dot(model(x), params=dict(model.named_parameters())))
 
     
     print(model)
-    optimizer = optimizer(params=model.parameters(),lr=lr, weight_decay=reg, **hp_optim)
+    optimizer = OPTIMIZERS[optimizer](params=model.parameters(),lr=lr, weight_decay=reg, **hp_optim)
     print('cfg', cfg)
-    trainer = ClassifierTrainer(model, loss_fn, optimizer, device)
-    # fit_res = trainer.fit(dl_train, dl_test, num_epochs=epochs, print_every=0, verbose=False, early_stopping=3)
+    trainer = ClassifierTrainer(model, LOSSES[loss_fn](), optimizer, device)
+    fit_res = trainer.fit(dl_train, dl_test, num_epochs=epochs, print_every=1, verbose=True, early_stopping=3)
     # ========================
 
     save_experiment(run_name, out_dir, cfg, fit_res)

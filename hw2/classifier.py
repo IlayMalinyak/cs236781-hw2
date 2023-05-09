@@ -22,8 +22,11 @@ class Classifier(nn.Module, ABC):
 
         # TODO: Add any additional initializations here, if you need them.
         # ====== YOUR CODE: ======
-        layers_list = next(model.children())
-        self.body = layers_list[:-1]
+        # for c in model.children():
+        #     print('****c*****')
+        #     print(c)
+        # layers_list = next(model.children())
+        # self.body = layers_list[:-1]
         self.head = nn.Softmax(dim=1)
         # ========================
 
