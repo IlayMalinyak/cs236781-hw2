@@ -340,16 +340,26 @@ class ResNet(CNN):
             block_channels = self.channels[cur_idx:next_idx]
             block_kernels = [3]*len(block_channels)
             # print(block_channels)
+<<<<<<< Updated upstream
             if self.bottleneck and in_channels == block_channels[0]:
                 block = ResidualBottleneckBlock(in_channels, block_channels[1:-1], block_kernels[1:-1], batchnorm=self.batchnorm, dropout=self.dropout,activation_type=self.activation_type, activation_params=self.activation_params)                  
             else:
                 block = ResidualBlock(in_channels, block_channels, block_kernels, self.batchnorm, self.dropout, self.activation_type,
                                      self.activation_params)
             in_channels = block_channels[-1]
+=======
+            if self.bottleneck and in_channels == block_channels[-1]:
+                block = ResidualBottleneckBlock(in_channels, block_channels[1:-1], block_kernels[1:-1], batchnorm=self.batchnorm, dropout=self.dropout,
+                                                activation_type=self.activation_type, activation_params=self.activation_params)
+            else:
+                block = ResidualBlock(in_channels, block_channels, block_kernels, self.batchnorm, self.dropout, self.activation_type,
+                                     self.activation_params)
+>>>>>>> Stashed changes
             layers.append(block)
             if next_idx - cur_idx == self.pool_every:
                 layers.append(POOLINGS[self.pooling_type](**self.pooling_params)) 
             cur_idx += self.pool_every
+            in_channels = block_channels[-1]
         seq = nn.Sequential(*layers)
         return seq
         
