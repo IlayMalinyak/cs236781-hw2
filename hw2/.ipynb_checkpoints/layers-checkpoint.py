@@ -344,10 +344,10 @@ class CrossEntropyLoss(Layer):
         # ====== YOUR CODE: ======
         dx = torch.nn.functional.softmax(x, dim=1)
         dx[range(y.shape[0]), y] -= 1
-        dx /= y.shape[0]
+        dx /= N
         # ========================
 
-        return dx
+        return dx*dout
 
     def params(self):
         return []

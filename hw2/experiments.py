@@ -8,6 +8,9 @@ import itertools
 import torchvision
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
+from torchviz import make_dot
+from IPython.display import display
+
 
 from cs236781.train_results import FitResult
 
@@ -107,7 +110,16 @@ def cnn_experiment(
     hidden_dims=[1024],
     model_type="cnn",
     # You can add extra configuration for your experiments here
-    **kw,
+    activation_type = "relu",
+    activation_params =dict(),
+    pooling_type = "max",
+    pooling_params= dict(kernel_size=2),
+    batchnorm=True,
+    dropout=0.1,
+    bottleneck=False,
+    loss_fn = torch.nn.CrossEntropyLoss(),
+    optimizer = torch.optim.SGD,
+    hp_optim = dict(momentum=0.001)
 ):
     """
     Executes a single run of a Part3 experiment with a single configuration.
@@ -142,8 +154,37 @@ def cnn_experiment(
     #  - The fit results and all the experiment parameters will then be saved
     #   for you automatically.
     fit_res = None
-    # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # ====== YOUR CODE: 
+    L = layers_per_block
+    K = filters_per_layer
+    
+    dl_train = DataLoader(ds_train, batch_size=bs_train)
+    dl_test = DataLoader(ds_test, batch_size=bs_test)
+    sample_shape = next(iter(dl_train))[0][0].shape
+    print(f'sample shape-{sample_shape}')
+    conv_channels = [elem for elem, count in zip(K, [L]*len(K)) for i in range(count)]
+    net_params = dict(
+        in_size=sample_shape, out_classes=10, channels=conv_channels,
+        pool_every=pool_every, hidden_dims=hidden_dims,
+        activation_type=activation_type, activation_params=activation_params,
+        pooling_type=pooling_type, pooling_params=pooling_params,
+        batchnorm=batchnorm, dropout=dropout,
+        bottleneck=bottleneck
+    )
+    # print(net_params)
+    model = ArgMaxClassifier(
+    model=model_cls(**net_params)
+    )
+    
+    x = torch.randn(1, *sample_shape)
+    display(make_dot(model(x), params=dict(model.named_parameters())))
+
+    
+    print(model)
+    optimizer = optimizer(params=model.parameters(),lr=lr, weight_decay=reg, **hp_optim)
+    print('cfg', cfg)
+    trainer = ClassifierTrainer(model, loss_fn, optimizer, device)
+    # fit_res = trainer.fit(dl_train, dl_test, num_epochs=epochs, print_every=0, verbose=False, early_stopping=3)
     # ========================
 
     save_experiment(run_name, out_dir, cfg, fit_res)

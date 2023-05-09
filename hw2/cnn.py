@@ -314,7 +314,6 @@ class ResNet(CNN):
     def _make_feature_extractor(self):
         
         in_channels, in_h, in_w, = tuple(self.in_size)
-
         layers = []
         # TODO: Create the feature extractor part of the model:
         #  [-> (CONV -> ACT)*P -> POOL]*(N/P)
@@ -341,13 +340,12 @@ class ResNet(CNN):
             block_channels = self.channels[cur_idx:next_idx]
             block_kernels = [3]*len(block_channels)
             # print(block_channels)
-            if not self.bottleneck:
+            if self.bottleneck and in_channels == block_channels[0]:
+                block = ResidualBottleneckBlock(in_channels, block_channels[1:-1], block_kernels[1:-1], batchnorm=self.batchnorm, dropout=self.dropout,activation_type=self.activation_type, activation_params=self.activation_params)                  
+            else:
                 block = ResidualBlock(in_channels, block_channels, block_kernels, self.batchnorm, self.dropout, self.activation_type,
                                      self.activation_params)
-                in_channels = block_channels[-1]
-            else:
-                block = ResidualBottleneckBlock(in_channels, block_channels, block_kernels, batchnorm=self.batchnorm, dropout=self.dropout,
-                                                activation_type=self.activation_type, activation_params=self.activation_params)
+            in_channels = block_channels[-1]
             layers.append(block)
             if next_idx - cur_idx == self.pool_every:
                 layers.append(POOLINGS[self.pooling_type](**self.pooling_params)) 
