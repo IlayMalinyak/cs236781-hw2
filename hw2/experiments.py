@@ -148,7 +148,7 @@ def objective(trial,run_name, layers_per_block, filters_per_layer, bs_train=128,
     optimizer = OPTIMIZERS['Adam'](params=model.parameters(),lr=lr, weight_decay=weight_decay, betas=(beta1,beta2))
     trainer = ClassifierTrainer(model, LOSSES['cross entropy'](), optimizer, device)
     fit_res = trainer.fit(dl_train, dl_test, num_epochs=10, print_every=5, verbose=False, early_stopping=3)
-    return fit_res.test_loss
+    return fit_res.test_loss[-1]
 
 
 def run_optuna_experiment(run_name, filters_per_layer, layers_per_block, subset=0, n_trials=50, out_dir="./results"):
