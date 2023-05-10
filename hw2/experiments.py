@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchviz import make_dot
 from IPython.display import display
+import optuna
 
 
 from cs236781.train_results import FitResult
@@ -27,7 +28,7 @@ MODEL_TYPES = {
     "resnet": ResNet,
 }
 
-OPTIMIZERS = {'SGD': torch.optim.SGD, 'ADAM': torch.optim.Adam}
+OPTIMIZERS = {'SGD': torch.optim.SGD, 'Adam': torch.optim.Adam}
 LOSSES = {"cross entropy":torch.nn.CrossEntropyLoss}
 
 
@@ -93,6 +94,75 @@ def mlp_experiment(
     return model, thresh, valid_acc, test_acc
 
 
+def define_model(trial, layers_per_block, filters_per_layer):
+    L = layers_per_block
+    K = filters_per_layer
+    conv_channels = [elem for elem, count in zip(K, [L]*len(K)) for i in range(count)]
+    dropout = trial.suggest_float('dropout', 0.1,0.3)
+    pool_every = trial.suggest_int('pool_every', 1,4)
+    hidden_dims_val = trial.suggest_int("hidden_dims_val", 256,1024,256)
+    hidden_dims_num = trial.suggest_int("hidden_dims_num", 1,4)
+    hidden_dims = [ hidden_dims_val]* hidden_dims_num
+    net_params = dict(
+        in_size=[3,32,32], out_classes=10, channels=conv_channels,
+        pool_every=pool_every, hidden_dims=hidden_dims,
+        activation_type='lrelu', activation_params=dict(negative_slope=0.05),
+        pooling_type='max', pooling_params=dict(kernel_size=2),
+        batchnorm=True, dropout=dropout,
+        bottleneck=False
+    )
+    # print(net_params)
+    model = ArgMaxClassifier(
+    model=ResNet(**net_params)
+    )
+    return model
+
+def objective(trial,run_name, layers_per_block, filters_per_layer, bs_train=128,
+    bs_test=None, subset=0):
+    model = define_model(trial, layers_per_block, filters_per_layer)
+    mean = (0.5, 0.5, 0.5)
+    std = (0.5, 0.5, 0.5)
+    tf = torchvision.transforms.Compose(
+    [
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=mean, std=std)
+    ]
+)
+    ds_train = CIFAR10(root=DATA_DIR, download=True, train=True, transform=tf)
+    ds_test = CIFAR10(root=DATA_DIR, download=True, train=False, transform=tf)
+    if subset:
+        train_idx = list(range(0, subset))
+        test_idx = list(range(0, subset//4))
+        ds_train = torch.utils.data.Subset(ds_train, train_idx)
+        ds_test = torch.utils.data.Subset(ds_test, test_idx)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dl_train = DataLoader(ds_train, batch_size=bs_train)
+    dl_test = DataLoader(ds_test, batch_size=bs_test)
+    
+    lr = trial.suggest_float('lr', 1e-5,5e-2)
+    weight_decay = trial.suggest_float('weight_decay', 1e-5,1e-2)
+    beta1 = trial.suggest_float('beta1', 0.7,1)
+    beta2 = trial.suggest_float('beta2', 0.7,1)
+    optimizer = OPTIMIZERS['Adam'](params=model.parameters(),lr=lr, weight_decay=weight_decay, betas=(beta1,beta2))
+    trainer = ClassifierTrainer(model, LOSSES['cross entropy'](), optimizer, device)
+    fit_res = trainer.fit(dl_train, dl_test, num_epochs=10, print_every=5, verbose=True, early_stopping=3)
+    return fit_res.test_loss
+
+
+def run_optuna_experiment(run_name, filters_per_layer, layers_per_block, subset=0, n_trials=50, out_dir="./results"):
+    try:
+        study = optuna.load_study(study_name='lstm', storage=f'sqlite:///{out_dir}/{run_name}.db')
+    except KeyError:
+        study = optuna.create_study(study_name='lstm', storage=f'sqlite:///{out_dir}/{run_name}.db')
+    study.optimize(lambda trial: objective(trial, run_name=run_name, filters_per_layer=filters_per_layer, layers_per_block=layers_per_block), n_trials=n_trials)
+    
+
+    
+    
+    
+    
+
 def cnn_experiment(
     run_name,
     out_dir="./results",
@@ -138,8 +208,22 @@ def cnn_experiment(
     if not bs_test:
         bs_test = max([bs_train // 4, 1])
     cfg = locals()
-
-    tf = torchvision.transforms.ToTensor()
+    
+    mean = (0.4914, 0.4822, 0.4465)
+    std = (0.247, 0.243, 0.261)
+    # tf = torchvision.transforms.ToTensor()
+    tf = torchvision.transforms.Compose(
+    [
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=mean, std=std)])
+#     tf = torchvision.transforms.Compose(
+#     [
+#         torchvision.transforms.ToTensor(),
+#         torchvision.transforms.Normalize(mean=mean, std=std),
+#         torchvision.transforms.RandomHorizontalFlip(),
+#         torchvision.transforms.RandomRotation(degrees=45),
+#     ]
+# )
     ds_train = CIFAR10(root=DATA_DIR, download=True, train=True, transform=tf)
     ds_test = CIFAR10(root=DATA_DIR, download=True, train=False, transform=tf)
     if subset:
@@ -147,6 +231,7 @@ def cnn_experiment(
         test_idx = list(range(0, subset//4))
         ds_train = torch.utils.data.Subset(ds_train, train_idx)
         ds_test = torch.utils.data.Subset(ds_test, test_idx)
+    print(f"dataset lengths: {len(ds_train)}, {len(ds_test)}", flush=True)
 
     if not device:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
