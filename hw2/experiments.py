@@ -66,7 +66,7 @@ def mlp_experiment(
         out_activation=out_activation,
     )
     
-    lr, weight_decay, momentum = 0.001, 0.001, 0.001  # Arguments for SGD optimizer
+    lr, weight_decay, momentum = 0.001, 0.001, 0.001  
     betas = (0.7, 0.99)
     # hp_optim = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, loss_fn=loss_fn)
     hp_optim = dict(lr=lr, weight_decay=weight_decay, betas=betas, loss_fn=loss_fn)
@@ -118,7 +118,7 @@ def define_model(trial, layers_per_block, filters_per_layer):
     return model
 
 def objective(trial,run_name, layers_per_block, filters_per_layer, bs_train=128,
-    bs_test=None, subset=0):
+    bs_test=32, subset=0):
     model = define_model(trial, layers_per_block, filters_per_layer)
     mean = (0.5, 0.5, 0.5)
     std = (0.5, 0.5, 0.5)
@@ -135,10 +135,11 @@ def objective(trial,run_name, layers_per_block, filters_per_layer, bs_train=128,
         test_idx = list(range(0, subset//4))
         ds_train = torch.utils.data.Subset(ds_train, train_idx)
         ds_test = torch.utils.data.Subset(ds_test, test_idx)
-
+    print(f"train size: {len(ds_train)}", f"test size: {len(ds_test)}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dl_train = DataLoader(ds_train, batch_size=bs_train)
     dl_test = DataLoader(ds_test, batch_size=bs_test)
+    print(dl_train.batch_sampler, dl_test.batch_sampler)
     
     lr = trial.suggest_float('lr', 1e-5,5e-2)
     weight_decay = trial.suggest_float('weight_decay', 1e-5,1e-2)
@@ -146,7 +147,7 @@ def objective(trial,run_name, layers_per_block, filters_per_layer, bs_train=128,
     beta2 = trial.suggest_float('beta2', 0.7,1)
     optimizer = OPTIMIZERS['Adam'](params=model.parameters(),lr=lr, weight_decay=weight_decay, betas=(beta1,beta2))
     trainer = ClassifierTrainer(model, LOSSES['cross entropy'](), optimizer, device)
-    fit_res = trainer.fit(dl_train, dl_test, num_epochs=10, print_every=5, verbose=True, early_stopping=3)
+    fit_res = trainer.fit(dl_train, dl_test, num_epochs=10, print_every=5, verbose=False, early_stopping=3)
     return fit_res.test_loss
 
 
@@ -155,7 +156,8 @@ def run_optuna_experiment(run_name, filters_per_layer, layers_per_block, subset=
         study = optuna.load_study(study_name='lstm', storage=f'sqlite:///{out_dir}/{run_name}.db')
     except KeyError:
         study = optuna.create_study(study_name='lstm', storage=f'sqlite:///{out_dir}/{run_name}.db')
-    study.optimize(lambda trial: objective(trial, run_name=run_name, filters_per_layer=filters_per_layer, layers_per_block=layers_per_block), n_trials=n_trials)
+    study.optimize(lambda trial: objective(trial, run_name=run_name, filters_per_layer=filters_per_layer,
+                                            layers_per_block=layers_per_block, subset=subset), n_trials=n_trials)
     
 
     
