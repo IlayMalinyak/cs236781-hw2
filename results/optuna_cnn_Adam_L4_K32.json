@@ -1,0 +1,25 @@
+{
+  "config": {
+    "beta1": 0.8958555184738214,
+    "beta2": 0.9923693857853395,
+    "dropout": 0.16858069055360392,
+    "hidden_dims_num": 1,
+    "hidden_dims_val": 1024,
+    "lr": 0.006151789565329328,
+    "pool_every": 1,
+    "weight_decay": 0.006145715141239145,
+    "layers_per_block": 4,
+    "filters_per_layer": [
+      32
+    ]
+  },
+  "results": {
+    "num_epochs": 10,
+    "train_loss": [],
+    "train_acc": [],
+    "test_loss": [
+      1.2479506119897095
+    ],
+    "test_acc": []
+  }
+}

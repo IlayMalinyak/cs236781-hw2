@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#SBATCH --ntasks=1
+
+#SBATCH --output cnn_exp_1.out
+
+#SBATCH --error cnn_exp_1.err
+
+#SBATCH --cpus-per-task 2
+
+#SBATCH --gres=gpu:1
+
+
+source $CONDA_HOME/etc/profile.d/conda.sh
+mamba init
+mamba activate $CONDA_ENV
+
+srun python ./cnn_exp.py

@@ -48,6 +48,7 @@ class Trainer(abc.ABC):
         checkpoints: str = None,
         early_stopping: int = None,
         print_every: int = 1,
+        trial = None,
         **kw,
     ) -> FitResult:
         """
@@ -64,7 +65,7 @@ class Trainer(abc.ABC):
         :param print_every: Print progress every this number of epochs.
         :return: A FitResult object containing train and test losses per epoch.
         """
-
+        print(f"starting trainging for", flush=True)
         actual_num_epochs = 0
         epochs_without_improvement = 0
 
@@ -83,7 +84,7 @@ class Trainer(abc.ABC):
             #  - Use the train/test_epoch methods.
             #  - Save losses and accuracies in the lists above.
             # ====== YOUR CODE: ======
-            train_result = self.train_epoch(dl_train)
+            train_result = self.train_epoch(dl_train, verbose=verbose)
             t_loss, t_acc = train_result.losses, train_result.accuracy
             # print(t_loss, t_acc)
             train_loss.append(sum(t_loss)/len(dl_train))
@@ -107,16 +108,20 @@ class Trainer(abc.ABC):
             if best_acc is None or test_result.accuracy > best_acc:
                 # ====== YOUR CODE: ======
                 best_acc = test_result.accuracy
-                self.save_checkpoint(f"./model_{type(self.model).__name__}.pth")
+                if checkpoints:
+                    self.save_checkpoint(f"{checkpoints}.pth")
                 epochs_without_improvement = 0
                 # ========================
             else:
                 # ====== YOUR CODE: ======
                 epochs_without_improvement += 1
                 if epochs_without_improvement == early_stopping:
-                    "early stopping!"
+                    print('early stopping!', flush=True)
                     break
                 # ========================
+            if trial is not None and trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+        print(f"training finished after {epoch} epochs", flush=True)
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)
 

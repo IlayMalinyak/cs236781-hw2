@@ -15,6 +15,8 @@ SUBMISSION_ZIPF_PATTERN = re.compile(SUBMISSION_NAME_PATTERN.pattern + r"\.zip")
 GITKEEP = ".gitkeep"
 
 
+
+
 def parse_cli():
     def is_dir(dirname):
         if not os.path.isdir(dirname):
@@ -108,7 +110,16 @@ def parse_cli():
         required=False,
     )
 
+    # run experiment
+    sp_exp = sp.add_parser("run_exp_1", help="run cnn experiment")
+    sp_exp.set_defaults(subcmd_fn=run_exp_1)
+    sp_exp.add_argument(
+        "--params_file", type=str, help="parameters for experiment"
+    )
+
     parsed = p.parse_args()
+
+
 
     if "subcmd_fn" not in parsed:
         p.print_help()
@@ -324,6 +335,48 @@ def prepare_submission(hw_dir, out_dir, submitter_ids, skip_run, **kwargs):
 
     finally:
         shutil.rmtree(dest_dir)
+
+
+def run_exp_1(params_file):
+    import json
+    from hw2.experiments import cnn_experiment
+    # params_file = "./results/optuna_K32_64_L1.json"
+    seed = 42
+    with open(params_file, "r") as f:
+        param_dict = json.load(f)
+    hp_optim = {'betas':(param_dict['beta1'], param_dict['beta2'])}
+    param_dict['reg']=param_dict['weight_decay']
+    param_dict['hidden_dims']=[param_dict['hidden_dims_val']]*param_dict['hidden_dims_num']
+    entries_to_remove = ('beta1', 'beta2', 'weight_decay', 'hidden_dims_val', 'hidden_dims_num', 'value')
+    for key in entries_to_remove:
+        param_dict.pop(key, None)
+    for k in [32,64]:
+        for l in [2,4,8,16]:
+            name = f'exp1_1_L{l}_K{k}'
+            print(name, flush=True)
+            cnn_experiment(
+                name, seed=seed, bs_train=50, batches=128, epochs=300, early_stopping=5,
+                filters_per_layer=[32,64], layers_per_block=1, **param_dict, optimizer='Adam',hp_optim=hp_optim,
+                model_type='cnn'
+            )
+    seed = 42
+    with open(params_file, "r") as f:
+        param_dict = json.load(f)
+    hp_optim = {'betas':(param_dict['beta1'], param_dict['beta2'])}
+    param_dict['reg']=param_dict['weight_decay']
+    param_dict['hidden_dims']=[param_dict['hidden_dims_val']]*param_dict['hidden_dims_num']
+    entries_to_remove = ('beta1', 'beta2', 'weight_decay', 'hidden_dims_val', 'hidden_dims_num', 'value')
+    for key in entries_to_remove:
+        param_dict.pop(key, None)
+    for k in [32,64]:
+        for l in [2,4,8,16]:
+            name = f'exp1_1_L{l}_K{k}'
+            print(name, flush=True)
+            cnn_experiment(
+                name, seed=seed, bs_train=50, batches=128, epochs=300, early_stopping=5,
+                filters_per_layer=[32,64], layers_per_block=1, **param_dict, optimizer='Adam',hp_optim=hp_optim,
+                model_type='cnn'
+            )
 
 
 if __name__ == "__main__":

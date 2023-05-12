@@ -1,0 +1,26 @@
+*** SLURM BATCH JOB 'test_job' STARTING ***
+*** Activating environment cs236781-hw ***
+/var/spool/slurmd/job206450/slurm_script: line 6: /home/ilay.kamai/miniconda3/etc/profile.d/conda.sh: No such file or directory
+no change     /home/ilay.kamai/mambaforge/condabin/conda
+no change     /home/ilay.kamai/mambaforge/bin/conda
+no change     /home/ilay.kamai/mambaforge/bin/conda-env
+no change     /home/ilay.kamai/mambaforge/bin/activate
+no change     /home/ilay.kamai/mambaforge/bin/deactivate
+no change     /home/ilay.kamai/mambaforge/etc/profile.d/conda.sh
+no change     /home/ilay.kamai/mambaforge/etc/fish/conf.d/conda.fish
+no change     /home/ilay.kamai/mambaforge/shell/condabin/Conda.psm1
+no change     /home/ilay.kamai/mambaforge/shell/condabin/conda-hook.ps1
+no change     /home/ilay.kamai/mambaforge/lib/python3.10/site-packages/xontrib/conda.xsh
+no change     /home/ilay.kamai/mambaforge/etc/profile.d/conda.csh
+modified      /home/ilay.kamai/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+Added mamba to /home/ilay.kamai/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+Run 'mamba init' to be able to run mamba activate/deactivate
+and start a new shell session. Or use conda to activate/deactivate.
+
+*** SLURM BATCH JOB 'test_job' DONE ***
