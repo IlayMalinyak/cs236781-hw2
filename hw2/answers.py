@@ -183,12 +183,9 @@ part3_q1 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+1. given the loss graph, the optimization error is not high. this is because we see the training loss decrease smoothly until it reaches a plateau. that implies that the at the end of the optimization proccess the gradients are small and therefore the optimization error is small.
+2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, and don't have a good "decrease" shape. also there is no overfitting (the test loss is not raising), we can say that the generalization error is higher than the optimization error.
+3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes anf therefore it is able to approximate the real boundary of the dataset.
 
 """
 
@@ -208,13 +205,12 @@ An equation: $e^{i\pi} -1 = 0$
 part3_q3 = r"""
 **Your answer:**
 
+the "optimal" point on the ROC curve may not be the best choice in this situation, as the "naive" ROC curve do not take into account the costs and risks associated with false positive and false negative classifications.
+    
+In scenario 1, where the disease leads to non-lethal symptoms, the cost of a false positive classification (i.e. diagnosing a healthy patient as sick) is high , as it results in a  unnecessary expensive and risky confirmation test. However, the cost of a false negative classification (i.e. failing to diagnose a sick patient) is low, as the symptoms are easy to detect and not dangerous. Therefore, in this scenario, it may be better to choose a classification threshold that maximizes sensitivity (i.e. minimizing false positive) even if it comes at the cost of increased false negative.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+In scenario 2, where the disease may lead to high risk of death if not diagnosed early, the cost of a false negative classification is very high, as it may result in delayed treatment and death. Therefore, it may be better to choose a classification threshold that maximizes specificity (i.e. minimizing false positives) even if it comes at the cost of increased false negatives.
+
 
 """
 
@@ -223,12 +219,10 @@ part3_q4 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+1. analyzing the results by column, we see that for all column (depth=1,2,4) the largest width (depth=32) isn't the best in terms of test accuracy (altough the difference is not significant). this implies that the model with highest width is a little bit too complex as it has higher generalization error than a model with less parameters (width=8). we also see that for all columns a model with width=2 (first row) is too simple as it has lower accuracy both in the validation and test sets. this can also understood by looking at the decision boundary - it is much simpler than the other rows (more "linear")
+2. analyzing by rows we see similiar trend - for all rows (width=2,8,32) the model with depth=1 is too simple (lower results overall, simple decision boundary), the model with depth=4 is a little bit too complex (lower test accuracy) compared toa  model with depth=2.
+3. comparing model with depth=1, width=32 woth model woth depth=4, width=8 we see that the later one is better. one possible explanation is the nonlinearity of the models- Besides having the same number of parameters they have different number of nonlinear activation layers. the model with depth=4 has 4 activation layers while the model with  depth=1 has only 1. In addition, taking into account the fact that each layer is a linear classifier (followed by nonlinear function) it is clear that it's more expressive to combine 4 different linear clasifiers than using 1 bigger linear classifier. This can explain why model with more layers and few hidden parameters is more powerfull the model with few layers and more hidden pararmeters.
+4. the optimal thresould did improved the reuslts on the test set compared to the validation set. the reason for that is that in our case, better model is maximizing both recall and precision (in our case there is no difference between FPR and FNR) so the optimal thresold should improve the model performance. In addition, there is no data shift between the test set and the training/validation set so evaluationg the threshold on the validation set effects the test set in a similiar way. 
 
 """
 # ==============
@@ -253,17 +247,14 @@ def part4_optim_hp():
 
 part4_q1 = r"""
 **Your answer:**
+1. in General, the 1x1 convolution reduce the number of parameters in the bottleneck block. in our case direct calculation gives:
+$3*3*64*64*2=73728$ for the regular block and $256*64*2+3*3*64*64=69632$ for the bottleneck. We see that also the bottleneck block has more layers and more feature maps, it has fewer parameters in total
 
+2. The bottleneck block requires fewer floating point operations than the regular block. This is because the 1x1 convolutions reduce and then increase the number of channels, allowing for more efficient computation of the subsequent 3x3 convolution. Therefore, the bottleneck block requires fewer computations and has lower computational complexity than the regular block.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+3. Spatially within Feature Maps: as both blocks has convolutions with the same kernel size (3x3), both can combine inputs spatially within feature maps by applying the convolution operation. here we neglegct the 1x1 convolution since it has no spatial resolution.
+Across Feature Maps: The bottleneck block is better at combining inputs across feature maps because of the 1x1 convolution that is used to reduce and then increase the number of channels. This allows caorse graining and enables the block to capture more complex features across feature maps.
 """
-
 # ==============
 
 # ==============
