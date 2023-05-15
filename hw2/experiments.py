@@ -211,7 +211,7 @@ def cnn_experiment(
     bs_test=None,
     batches=100,
     epochs=100,
-    early_stopping=3,
+    early_stopping=10,
     checkpoints=None,
     lr=1e-3,
     reg=1e-3,
@@ -240,6 +240,8 @@ def cnn_experiment(
     These parameters are populated by the CLI parser below.
     See the help string of each parameter for it's meaning.
     """
+
+    # TODO: implement batchs 
     if not seed:
         seed = random.randint(0, 2 ** 31)
     torch.manual_seed(seed)
@@ -319,7 +321,7 @@ def cnn_experiment(
     print(cfg)
     optimizer = OPTIMIZERS[optimizer](params=model.parameters(),lr=lr, weight_decay=reg, **hp_optim)
     trainer = ClassifierTrainer(model, LOSSES[loss_fn](), optimizer, device)
-    fit_res = trainer.fit(dl_train, dl_test, num_epochs=epochs, print_every=1, verbose=False, early_stopping=5)
+    fit_res = trainer.fit(dl_train, dl_test, num_epochs=epochs, print_every=1, verbose=False, early_stopping=early_stopping, checkpoints=checkpoints)
     # ========================
 
     save_experiment(run_name, out_dir, cfg, fit_res)

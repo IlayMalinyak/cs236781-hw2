@@ -12,14 +12,12 @@ param_dict['hidden_dims']=[param_dict['hidden_dims_val']]*param_dict['hidden_dim
 entries_to_remove = ('beta1', 'beta2', 'weight_decay', 'hidden_dims_val', 'hidden_dims_num', 'value')
 for key in entries_to_remove:
     param_dict.pop(key, None)
-for l,p in zip([2,4,8], [2,3,6]):
+for l,p in zip([8,16,32], [2,4,8]):
     name = "exp1_4"
     print(name)
     # param_dict['pool_every'] = l//4 if l > 4 else 1 
     param_dict['pool_every'] = p
     cnn_experiment(
-        name, seed=seed, bs_train=128, epochs=100, early_stopping=5,
-        filters_per_layer=[64,128,256], layers_per_block=l, **param_dict, optimizer='Adam',hp_optim=hp_optim,
-        model_type='resnet'
-    )
+        name, seed=seed, bs_train=128, epochs=100, early_stopping=5, filters_per_layer=[32], layers_per_block=l, optimizer='Adam',hp_optim=hp_optim,
+        model_type='resnet',**param_dict)
 

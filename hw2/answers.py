@@ -253,6 +253,7 @@ $3*3*64*64*2=73728$ for the regular block and $256*64*2+3*3*64*64=69632$ for the
 2. The bottleneck block requires fewer floating point operations than the regular block. This is because the 1x1 convolutions reduce and then increase the number of channels, allowing for more efficient computation of the subsequent 3x3 convolution. Therefore, the bottleneck block requires fewer computations and has lower computational complexity than the regular block.
 
 3. Spatially within Feature Maps: as both blocks has convolutions with the same kernel size (3x3), both can combine inputs spatially within feature maps by applying the convolution operation. here we neglegct the 1x1 convolution since it has no spatial resolution.
+<br>
 Across Feature Maps: The bottleneck block is better at combining inputs across feature maps because of the 1x1 convolution that is used to reduce and then increase the number of channels. This allows caorse graining and enables the block to capture more complex features across feature maps.
 """
 # ==============
@@ -265,12 +266,16 @@ part5_q1 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+in the first experiment we tested the effect of varying depth with fixed channels in a CNN model. it can be seen from the
+ graphs that for small number of layers (2,4) increasing the depth results in better accuracy. this is because more
+  layers (with fixed number of channels) gives more spatial resolution and ability to learn more complex features within the image.
+  <br>
+when the number of layers keeps growing,
+ (above 4 in our case) the loss and accuracy are constant, meaning the gradients are zero. this is vanishing gradients issue that cause 
+ the larger models to become non-trainable. vanishing gradient is a problem of large models - since propagating the graidents through many layers
+causes the gradients to become very small and eventually zero. this is because the gradients are multiplied by the weights in each layer, and if the weights are smaller than 1, the gradients will become smaller and smaller.
+    one way to solve this problem is by using batch normalization, which normalizes the input to each layer to have zero mean and unit variance. this allows the gradients to flow through the network without vanishing.
+    another way is by using skip connections, which allow the gradients to flow directly to the lower layers without passing through the upper layers. this also allows the gradients to flow without vanishing.
 
 """
 
@@ -278,26 +283,25 @@ part5_q2 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+in the second experiment we tested the effect of varying width with fixed depth in a CNN model. it can be seen from the
+graphs that for fixed depth, increasing the width results in a minor increase in accuracy (compared to the change we saw in exp1_1
+when we changed the depth). for l=2 the difference between 
+different widths is almost negligble, and for l=4 the difference is a little bit bigger. The effect of increasing the width is
+minor because the number of layers is fixed and therefore the spatial resolution is fixed. this means that the model can't learn more
+complex features, and therefore the effect of increasing the width is minor. moving from l=2 to l=4 reuslts in better 
+preformence for all $K$ (i.e model with l=4 and k=32 is better than model with l=2 and k=128). this implies that depth is more important
+than number of channels.  in addition, we can see that for l=8 we get vanishing
+gradients, similiar to what we saw in exp_1_1.  
 """
 
 part5_q3 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+in the third experiment we tested the effect of varying depth and width in a CNN model. it can be seen from the graphs 
+that model with more than 4 layers in total in non_trainable in accordance to what we saw in exp1_1 and exp1_2.
+that leaves us with only 1 trainable model - $l=2$ $k=[64,128]$ which perfmored similiar to models from exp1_1 and exp1_2. with l=4
+(which has the same total number of layers)
 """
 
 part5_q4 = r"""
