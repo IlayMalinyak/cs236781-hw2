@@ -65,7 +65,6 @@ class Trainer(abc.ABC):
         :param print_every: Print progress every this number of epochs.
         :return: A FitResult object containing train and test losses per epoch.
         """
-        print(f"starting trainging for", flush=True)
         actual_num_epochs = 0
         epochs_without_improvement = 0
 
@@ -85,16 +84,16 @@ class Trainer(abc.ABC):
             #  - Save losses and accuracies in the lists above.
             # ====== YOUR CODE: ======
             
-            train_result = self.train_epoch(dl_train, verbose=verbose)
+            train_result = self.train_epoch(dl_train, **kw)
             t_loss, t_acc = train_result.losses, train_result.accuracy
             # print(t_loss, t_acc)
-            train_loss.append(sum(t_loss)/len(dl_train))
+            train_loss.extend(t_loss)
             train_acc.append(t_acc)
             
             
-            test_result = self.test_epoch(dl_test)
+            test_result = self.test_epoch(dl_test, **kw)
             t_loss, t_acc = test_result.losses, test_result.accuracy
-            test_loss.append(sum(t_loss)/len(dl_test))
+            test_loss.extend(t_loss)
             test_acc.append(t_acc)
             actual_num_epochs += 1
             
@@ -321,7 +320,9 @@ class ClassifierTrainer(Trainer):
 class LayerTrainer(Trainer):
     def __init__(self, model, loss_fn, optimizer):
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.model = model
+        self.loss_fn = loss_fn
+        self.optimizer = optimizer
         # ========================
 
     def train_batch(self, batch) -> BatchResult:
@@ -334,7 +335,25 @@ class LayerTrainer(Trainer):
         #  - Calculate number of correct predictions (make sure it's an int,
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        X = X.view(X.shape[0], -1)
+        X.requires_grad = True
+
+        output = self.model(X)
+        loss = self.loss_fn(output, y)
+        self.optimizer.zero_grad()
+        self.model.backward(self.loss_fn.backward())
+        params= self.optimizer.params
+        # grads = [dp.mean() for p,dp in params]
+        # params_1 = [p.mean() for p,dp in params.copy()]
+        self.optimizer.step()
+        # params_2 = [p.mean() for p,dp in params]
+
+        
+        loss = loss.item()
+        # print(output.shape, y.shape)
+        # print(y.shape, (output.argmax(dim=1) == y).shape)
+        num_correct = (output.argmax(dim=1) == y).sum().item()
+        # num_correct = len(output)
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -344,7 +363,12 @@ class LayerTrainer(Trainer):
 
         # TODO: Evaluate the Layer model on one batch of data.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        X = X.view(X.shape[0], -1)
+        output = self.model(X)
+        loss = self.loss_fn(output, y)
+        loss = loss.item()
+        num_correct = (output.argmax(dim=1) == y).sum().item()
         # ========================
 
         return BatchResult(loss, num_correct)
+

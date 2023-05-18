@@ -230,6 +230,7 @@ class Linear(Layer):
         # deviation of `wstd`. Init bias to zero.
         # ====== YOUR CODE: ======
         self.w = torch.normal(torch.zeros((out_features, in_features)), torch.ones((out_features, in_features))*wstd)
+        # self.w.requires_grad_()
         self.b = torch.zeros(out_features)
         # self.w.requires_grad = True
         # self.b.requires_grad = True
@@ -252,7 +253,9 @@ class Linear(Layer):
 
         # TODO: Compute the affine transform
         # ====== YOUR CODE: ======
-        out = torch.matmul(x, self.w.t()) + self.b
+        out = torch.matmul(x, self.w.t()) + self.b  # ORIGINAL
+        # out = x.view(x.shape[0], -1) @ self.w.t() + self.b   # Yanay
+
         # self.dw = None
         # self.db = None
         # self.dw.requires_grad = True
@@ -275,10 +278,14 @@ class Linear(Layer):
         #   - db, the gradient of the loss with respect to b
         #  Note: You should ACCUMULATE gradients in dw and db.
         # ====== YOUR CODE: ======
-        self.dw += torch.matmul(dout.t(), x)
+        self.dw += torch.matmul(dout.t(), x) ## ORIGIN
+        
+        # self.dw += dout.t() @ x.view(x.shape[0], -1) ## Yanay
+        
         self.db += dout.sum(0)
         # self.db = dout.sum(0)
         dx = torch.matmul(dout, self.w)
+        
         # ========================
 
         return dx
@@ -296,10 +303,8 @@ class CrossEntropyLoss(Layer):
         Computes cross-entropy loss directly from class scores.
         Given class scores x, and a 1-hot encoding of the correct class yh,
         the cross entropy loss is defined as: -yh^T * log(softmax(x)).
-
         This implementation works directly with class scores (x) and labels
         (y), not softmax outputs or 1-hot encodings.
-
         :param x: Tensor of shape (N,D) where N is the batch
             dimension, and D is the number of features. Should contain class
             scores, NOT PROBABILITIES.
@@ -313,14 +318,14 @@ class CrossEntropyLoss(Layer):
         N = x.shape[0]
 
         # Shift input for numerical stability
+        
         xmax, _ = torch.max(x, dim=1, keepdim=True)
         x = x - xmax
 
         # TODO: Compute the cross entropy loss using the last formula from the
         #  notebook (i.e. directly using the class scores).
         # ====== YOUR CODE: ======
-        y_hot = torch.nn.functional.one_hot(y)
-        # print(y_hot.shape, x.shape)
+        y_hot = torch.nn.functional.one_hot(y, num_classes=10)
         loss = -(x*y_hot).sum(dim=1) + torch.log(torch.exp(x*(torch.logical_not(y_hot)+y_hot)).sum(dim=1))
         loss = loss.mean()
         # print(loss)
@@ -344,10 +349,10 @@ class CrossEntropyLoss(Layer):
         # ====== YOUR CODE: ======
         dx = torch.nn.functional.softmax(x, dim=1)
         dx[range(y.shape[0]), y] -= 1
-        dx /= N
+        dx /= y.shape[0]
         # ========================
 
-        return dx*dout
+        return dx
 
     def params(self):
         return []
@@ -368,7 +373,12 @@ class Dropout(Layer):
         #  Notice that contrary to previous layers, this layer behaves
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            mask = ((torch.rand(x.shape) >= self.p) / (1-self.p))
+        else:
+            mask = torch.ones(x.shape)
+        out = x * mask
+        self.last_mask = mask
         # ========================
 
         return out
@@ -376,7 +386,7 @@ class Dropout(Layer):
     def backward(self, dout):
         # TODO: Implement the dropout backward pass.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        dx = self.last_mask * dout
         # ========================
 
         return dx
@@ -454,9 +464,7 @@ class MLP(Layer):
     """
     A simple multilayer perceptron based on our custom Layers.
     Architecture is (with ReLU activation):
-
         FC(in, h1) -> ReLU -> FC(h1,h2) -> ReLU -> ... -> FC(hn, num_classes)
-
     Where FC is a fully-connected layer and h1,...,hn are the hidden layer
     dimensions.
     If dropout is used, a dropout layer is added after every activation
@@ -488,11 +496,14 @@ class MLP(Layer):
         # ====== YOUR CODE: ======
         in_d = in_features
         for h_d in hidden_features:
-            layers.append(Linear(in_d, h_d))
+            layers.append(Linear(in_d, h_d, **kw))
             activation_layer = ReLU() if activation == 'relu' else Sigmoid()
             layers.append(activation_layer)
+            if dropout>0:
+                dropout_layer = Dropout(p=dropout)
+                layers.append(dropout_layer)
             in_d = h_d
-        layers.append(Linear(in_d, num_classes))
+        layers.append(Linear(in_d, num_classes, **kw))
         # ========================
 
         self.sequence = Sequential(*layers)

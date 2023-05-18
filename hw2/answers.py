@@ -45,7 +45,7 @@ def part2_overfit_hp():
     wstd, lr, reg = 0, 0, 0
     # TODO: Tweak the hyperparameters until you overfit the small dataset.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd ,lr, reg = 0.1, 0.01, 0
     # ========================
     return dict(wstd=wstd, lr=lr, reg=reg)
 
@@ -62,7 +62,7 @@ def part2_optim_hp():
     # TODO: Tweak the hyperparameters to get the best results you can.
     # You may want to use different learning rates for each optimizer.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd ,lr_vanilla, lr_momentum, lr_rmsprop, reg= 0.068, 0.045, 0.0035,0.005, 0.018
     # ========================
     return dict(
         wstd=wstd,
@@ -81,8 +81,9 @@ def part2_dropout_hp():
     # TODO: Tweak the hyperparameters to get the model to overfit without
     # dropout.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd, lr = 0.1, 0.003
     # ========================
+    return dict(wstd=wstd, lr=lr)
     return dict(wstd=wstd, lr=lr)
 
 
@@ -184,8 +185,8 @@ part3_q1 = r"""
 
 
 1. given the loss graph, the optimization error is not high. this is because we see the training loss decrease smoothly until it reaches a plateau. that implies that the at the end of the optimization proccess the gradients are small and therefore the optimization error is small.
-2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, and don't have a good "decrease" shape. also there is no overfitting (the test loss is not raising), we can say that the generalization error is higher than the optimization error.
-3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes anf therefore it is able to approximate the real boundary of the dataset.
+2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, and don't have a good "decrease" shape. although there is no overfitting (the test loss is not raising), we can say that the generalization error is higher than the optimization error.
+3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes and therefore it is able to approximate the real boundary of the dataset.
 
 """
 
@@ -193,12 +194,7 @@ part3_q2 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+for the model we trained at the beginning of the notebook, we expect the validation set to have more FNR than FPR. this is because we can see that the model's decision boundary is over-estimating the area of class 0 (regions that the model marked as class 0 and has points from class 1) i.e the probabilty for the model to classify sample with label 1 as 0 is higher than the opposite case (classifiying sample with label 0 as 1). since those mistakes are False negatives we assuming that the FNR would be higher than FPR. In general, if you know exactily how the data was generated, we can estimate the FNR and FPR based on the model decision boundary.  
 
 """
 
