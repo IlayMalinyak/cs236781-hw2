@@ -30,7 +30,7 @@ part1_q2 = r"""
 **Your answer:**
 
 
-backprop is not the only way to perform decent-based optimization and therefore it is not required in a decent-based training (for example - https://arxiv.org/abs/2202.08587). however, the use of chaine-rule, computational graphs and automatic differentiation makes backprop the method that gives the best trade-off of efficiency and accuracy in a scenario of heavy computations and it is the most used optimization method in the field of deep learning  
+backprop is just a way for efficient calculations of gradients and therefore is it not the only way to perform decent-based optimization and it is not required in a decent-based training. for example, we saw in the tutorial that it is possible to use Forward mode AD instead. (there are also other methods. for example - https://arxiv.org/abs/2202.08587). however, the use of chaine-rule, computational graphs and automatic differentiation makes backprop the method that gives the best trade-off of efficiency and accuracy in a scenario of heavy computations and it is the most used optimization method in the field of deep learning  
 ```
 
 
@@ -244,13 +244,13 @@ def part4_optim_hp():
 part4_q1 = r"""
 **Your answer:**
 1. in General, the 1x1 convolution reduce the number of parameters in the bottleneck block. in our case direct calculation gives:
-$3*3*64*64*2=73728$ for the regular block and $256*64*2+3*3*64*64=69632$ for the bottleneck. We see that also the bottleneck block has more layers and more feature maps, it has fewer parameters in total
+for the regular block we have two layers with kernel 3x3 and 256 input and output channels that gives (including bias): $(3*3*256+1)*256*2=1180160$  for the bottleneck we have 3 layers. number of parameters is: $(1*1*256+1)*64+ (3*3*64+1)*64 + (1*1*64 + 1)*256=70016$ for the bottleneck. We see that also the bottleneck block has more layers, it has much fewer parameters in total
 
 2. The bottleneck block requires fewer floating point operations than the regular block. This is because the 1x1 convolutions reduce and then increase the number of channels, allowing for more efficient computation of the subsequent 3x3 convolution. Therefore, the bottleneck block requires fewer computations and has lower computational complexity than the regular block.
 
-3. Spatially within Feature Maps: as both blocks has convolutions with the same kernel size (3x3), both can combine inputs spatially within feature maps by applying the convolution operation. here we neglegct the 1x1 convolution since it has no spatial resolution.
+3. Spatially within Feature Maps: as both blocks has convolutions with the same kernel size (3x3), both can combine inputs spatially within feature maps by applying the convolution operation. the 1x1 convolution is of no benefit since it has no spatial resolution.
 <br>
-Across Feature Maps: The bottleneck block is better at combining inputs across feature maps because of the 1x1 convolution that is used to reduce and then increase the number of channels. This allows caorse graining and enables the block to capture more complex features across feature maps.
+Across Feature Maps: The bottleneck block is better at combining inputs across feature maps because it uses different number of feature maps. the 1x1 convolution is used to reduce at the beginning and increase at the end the number of channels. This allows coarse graining and enables the block to capture more complex features across feature maps.
 """
 # ==============
 
@@ -303,16 +303,7 @@ that leaves us with only 1 trainable model - $l=2$ $k=[64,128]$ which perfmored 
 part5_q4 = r"""
 **Your answer:**
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
-"""
-
+in experiment 1.4 we tested the effect of skip connections by using Resent. in experiment 1.1 and 1.3 we saw that models with more than 4 convolution layers in total faced vanishing of the gradients and became non-trainable. using skip connections (in 1.4) the phenomena no longer occur, all the model were trainable and we can train much deeper networks. we therefore conclude that the residual block, together with batchnorm, enables more uniform flow of the graidents and prevent them from vanising or exploding. regarding performance - as the hyperparameter space is very large (many parameters that spans a large range of values) and the models can be sensitive to the chioce of hyperparameters, ni order to fully utilize the models one needs an efficient method to tune them. we used optuna package which provides an optimization framework for efficient tuning large number of hyper-parameters. we run multiple optimization experiments for a seleceted architectures of resnet and cnn and chose the best ones. the performence of Resnet on our dataset were similiar to that of CNN. however, on different CV tasks, the depth Resnet allows was proved to lead to better results than shallow networks.       
 
 # ==============
 

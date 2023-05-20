@@ -337,9 +337,9 @@ class ResNet(CNN):
             if next_idx < self.pool_every:
                 next_idx = len(self.channels)
             # print(next_idx)
+            # print(self.channels, cur_idx, next_idx, self.pool_every)
             block_channels = self.channels[cur_idx:next_idx]
             block_kernels = [3]*len(block_channels)
-            # print(block_channels)
             if self.bottleneck and in_channels == block_channels[0]:
                 block = ResidualBottleneckBlock(in_channels, block_channels[1:-1], block_kernels[1:-1], batchnorm=self.batchnorm, dropout=self.dropout,activation_type=self.activation_type, activation_params=self.activation_params)                  
             else:
