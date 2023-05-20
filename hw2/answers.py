@@ -303,8 +303,19 @@ that leaves us with only 1 trainable model - $l=2$ $k=[64,128]$ which perfmored 
 part5_q4 = r"""
 **Your answer:**
 
-in experiment 1.4 we tested the effect of skip connections by using Resent. in experiment 1.1 and 1.3 we saw that models with more than 4 convolution layers in total faced vanishing of the gradients and became non-trainable. using skip connections (in 1.4) the phenomena no longer occur, all the model were trainable and we can train much deeper networks. we therefore conclude that the residual block, together with batchnorm, enables more uniform flow of the graidents and prevent them from vanising or exploding. regarding performance - as the hyperparameter space is very large (many parameters that spans a large range of values) and the models can be sensitive to the chioce of hyperparameters, ni order to fully utilize the models one needs an efficient method to tune them. we used optuna package which provides an optimization framework for efficient tuning large number of hyper-parameters. we run multiple optimization experiments for a seleceted architectures of resnet and cnn and chose the best ones. the performence of Resnet on our dataset were similiar to that of CNN. however, on different CV tasks, the depth Resnet allows was proved to lead to better results than shallow networks.       
-
+in experiment 1.4 we tested the effect of skip connections by using Resent.
+in experiment 1.1 and 1.3 we saw that models with more than 4 convolution layers in total faced vanishing
+of the gradients and became non-trainable. using skip connections (in 1.4) the phenomena no longer occur,
+all the model were trainable and we can train much deeper networks. we therefore conclude that the residual block,
+together with batchnorm, enables more uniform flow of the graidents and prevent them from vanising or exploding.
+regarding performance - as the hyperparameter space is very large (many parameters that spans a large range of values)
+and the models can be sensitive to the choice of hyperparameters, in order to fully utilize the models one needs an
+efficient method to tune them. we used optuna package which provides an optimization framework for efficient tuning 
+large number of hyper-parameters. we run multiple optimization experiments for a seleceted architectures and small number of epochs
+for both resnet and cnn and based on the results wechose the parameters for the actual experiment.
+the performence of Resnet on our dataset were similiar to that of CNN. however, on different CV tasks,
+the depth Resnet allows was proved to lead to better results than shallow networks.       
+"""
 # ==============
 
 # ==============
@@ -315,12 +326,29 @@ part6_q1 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+in generall, the model did not performed well on those pictures. in the first image there are three dolphins.
+the model located on of the bounding box correctly, but the other two bounding boxes are not accurate. the labels is also
+not accurate -  the model interperted the scene
+as persons on a surfboard, and therefore labeled the dolphins as "person" or "surfboard". this implies a bias in the dataset
+the model was trained on - the model was trained on a dataset with many images of persons on surfboards, and therefore when it
+see an object above the water it interpert it as a person on a surfboard.
+in the second image there are three dogs and one cat close to each other. here, the model 
+located 2 bounding boxes over cat and dog together and labeled them as a cat.
+possible reasons for the poor performance are: small number of classes - even when the model located the bounding box correctly,
+it labeled the object not correctly. this is because the model was trained on a dataset with limited number of
+classes (the basic model was trained on COCO dataset which has 80 classes).
+another reason is occulusion - in the second image the cat is occluded by the dog, and the model failed to locate it. 
+<br>
+to resolve those issues we can: 
+<br>
+1. train the model on a dataset with more classes (e.g imagenet) and fine tune it on our dataset.
+<br>
+2. train the model on a dataset with more variability per class - many instances of the same class in different poses.
+<br>
+3. train the model with different size of bounding boxes to allow the model better seperate between close objects.
+<br>
+4. change the number of bounding boxes per grid cell to allow the model to locate more objects in the same grid cell. 
+
 
 """
 
