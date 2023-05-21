@@ -370,13 +370,14 @@ An equation: $e^{i\pi} -1 = 0$
 part6_q3 = r"""
 **Your answer:**
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+the model shows different drawbacks in each one of the images. the first image shows many many little ducks on the road together with 
+people and cars. the model catches the people baut fail to catch any of the ducks. this might be because they are very small and occluded objects (they masking each other and looks like one big object). it also don't recognize any of the cars at the background. the second image shows a cow licking a cat. this time the model accurately puts bounding boxes and classify the cat but he misclassify the cow as a dog. this might be because of model bias - this scene is not normal and probably most of the images the model was trained on with some animal licking a cat was of dog or another cat. therefore, when the model see a cat licked by another animal, it mistakenly interpert it as a dog (or a cat) where's here its a cow. the third image is very interesting - we see a bear in a camping playing with a stove. the model gives two, almost identically, bounding boxes around the bear one labeld as a bear and the other one (with lower probabilty) as a cat. it is possible that two factors cause the confusion - 
+<br>
+1. the bear's head is down. this is a form of deformation that changes the shape of the bear and makes it harder to classify
+<br>
+2. this is another unusual scene (bear playing with a stove) and the classification of cat might relates to model bias (cat's are more common to play with humans stuff)
+<br>
+the last image is of man and dog in the dark. the model do not recognize the man and recognize the dog as a horse. this is because the dark ilumination blur most of the features the helps the model recognize the objects. 
 
 """
 
