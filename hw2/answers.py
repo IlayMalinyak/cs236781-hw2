@@ -286,7 +286,7 @@ different widths is almost negligble, and for l=4 the difference is a little bit
 minor because the number of layers is fixed and therefore the spatial resolution is fixed. this means that the model can't learn more
 complex features, and therefore the effect of increasing the width is minor. moving from l=2 to l=4 reuslts in better 
 preformence for all $K$ (i.e model with l=4 and k=32 is better than model with l=2 and k=128). this implies that depth is more important
-than number of channels.  in addition, we can see that for l=8 we get vanishing
+than number of channels.  in addition, we can see that for l=8 we get vanishing. the performence of the best models (l=4) were similiar in both experiments.
 gradients, similiar to what we saw in exp_1_1.  
 """
 
@@ -313,8 +313,8 @@ and the models can be sensitive to the choice of hyperparameters, in order to fu
 efficient method to tune them. we used optuna package which provides an optimization framework for efficient tuning 
 large number of hyper-parameters. we run multiple optimization experiments for a seleceted architectures and small number of epochs
 for both resnet and cnn and based on the results wechose the parameters for the actual experiment.
-the performence of Resnet on our dataset were similiar to that of CNN. however, on different CV tasks,
-the depth Resnet allows was proved to lead to better results than shallow networks.       
+on this specific dataset and with the given architectures, we see that the resnet model with the lowerst number of layers converged first. this implies that the dataset is relatively simple and can be learned by simple network. we also see that  
+CNN outperform Resnet (altough the difference is not high and might change with more carefull tuning of hyper-parameters). however, on different CV tasks, usually the depth that Resnet allows was proved to lead to better results than shallow networks.       
 """
 # ==============
 
