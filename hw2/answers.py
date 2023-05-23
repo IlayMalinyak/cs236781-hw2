@@ -45,24 +45,23 @@ def part2_overfit_hp():
     wstd, lr, reg = 0, 0, 0
     # TODO: Tweak the hyperparameters until you overfit the small dataset.
     # ====== YOUR CODE: ======
-    wstd ,lr, reg = 0.1, 0.01, 0
+    wstd ,lr, reg = 0.1, 0.1, 0
     # ========================
     return dict(wstd=wstd, lr=lr, reg=reg)
 
 
 def part2_optim_hp():
     wstd, lr_vanilla, lr_momentum, lr_rmsprop, reg, = (
-        0,
-        0,
-        0,
-        0,
-        0,
+        0.1,
+        0.045,
+        0.003,
+        0.0007,
+        0.001,
     )
 
     # TODO: Tweak the hyperparameters to get the best results you can.
     # You may want to use different learning rates for each optimizer.
     # ====== YOUR CODE: ======
-    wstd ,lr_vanilla, lr_momentum, lr_rmsprop, reg= 0.068, 0.045, 0.0035,0.005, 0.018
     # ========================
     return dict(
         wstd=wstd,
@@ -75,67 +74,117 @@ def part2_optim_hp():
 
 def part2_dropout_hp():
     wstd, lr, = (
-        0,
-        0,
+        0.1,
+        0.003,
     )
     # TODO: Tweak the hyperparameters to get the model to overfit without
     # dropout.
     # ====== YOUR CODE: ======
-    wstd, lr = 0.1, 0.003
+
     # ========================
-    return dict(wstd=wstd, lr=lr)
     return dict(wstd=wstd, lr=lr)
 
 
 part2_q1 = r"""
 **Your answer:**
+1. The difference between the graph without dropout and the graphs with dropout corresponds to what we expected: since dropout is a kind of regularization, it is understood that without dropout we will get the best performance for the training set, but they will not necessarily reflect the performance for the test set, which can suffer from overfitting. At the same time, too strong regularization can also hurt the performance for the training set, because it limits the freedom of the model. In this case, too strong dropout will prevent the different neurons from dividing "roles" between them and learning a complex pattern. 
 
+    Indeed, we see, as expected, that the no-dropout performance is best for the training set (and deteriorates as the dropout increases), while for the test set the change is more complex and non-monotonic: the performance for the test set improves slightly with moderate dropout, but at least for the measure of accuracy deteriorates for too high dropout.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+    As an example, we can see very clearly how the gap between the loss graph of dropout=0 and the loss graph of dropout=0.4 is getting wider throughout the training both for the trust set and for the test set, but in opposite directions: for the training set the loss of dropout=0.4 is higher, and for the test set the loss of dropout=0 is higher.
 
+2. For the training set, the expected pattern was obtained: low-dropout led to better performance according to both indices than high-dropout setting - because dropout is a regularization that limits the model. 
+
+    But for the test set a more complex pattern was obtained: the loss of low-dropout was initially lower but it gradually increased and became higher than the loss of high-dropout (which decreased moderately); But the accuracy of low-dropout remains higher than that of high-dropout throughout the entire training process. It is also surprising to note that the loss of low-dropout increased slightly while its accuracy also increased. According to our interpretation, this pattern reflects the fact that a low-dropout model becomes more equal between examples, i.e. it achieved correct prediction but with low confidence for many examples, and it becomes more equal throughout training, while the high-dropout model achieved superior performances (correct and with high confidence) on a few examples, and in the rest of the examples it was wrong.
+
+    This result was probably caused by the fact that too high a dropout prevented the neurons from dividing different roles between them and thus prevented them from adapting to a variety of samples over time.
 """
 
 part2_q2 = r"""
 **Your answer:**
+Yes, it is possible, because the accuracy for each example is boolean while the loss is continuous. So, for example, it is possible that for one example in the dataset the value of $\hat{y}$ of the correct $y$ will increase by infinitesimal, smallest as needed for it to be the maximum, while for all the other examples the $\hat{y}$ of the correct $y$ will decrease a lot but still stay the maximum. In this case, the loss will increase while the accuracy will increase too - because only the predicted label of one example change, and it change to the correct one.
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+It cam happen in cases where the model improves but the variance of the values in the outbut is reduced - so the scores of the correct labels are gatting closer to the smallest value that needed to be the predicted labels.
 """
 
 part2_q3 = r"""
 **Your answer:**
+1. backpropagation is the algorithm that calculates the gradients of all the parameters in the model. Gradient Descent is the algorithm that updates the parameters of the model according to their gradients, and for this purpose it can use the backpropagation algorithm, in the case of a neural network.
 
+2. In GD, the algorithm uses each iteration in the entire training set $X$, and calculates the error and gradients based on it. In contrast, in SGD, the algorithm in each iteration randomly selects a one example $x \in X$, and calculates the error and the gradients based on it.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+3. First SGD is has lower time/space complaxcity than GD, becaus it calculate the gradient only for one example each time.
+Second, since SGD considers a different example at random each time, it can get out of "traps": local minima points that GD cannot get out of.
+
+4. 
+    1. Yes, it is:
+$\frac{\partial L_1}{\partial \Theta} + \frac{\partial L_2}{\partial \Theta} + ... + \frac{\partial L_k}{\partial \Theta} = \frac{\partial (L_1 + L_2 + ... + L_k)}{\partial \Theta} = \frac{\partial (\sum_{x \in X_1}L(x) + \sum_{x \in X_2}L(x) + ... + \sum_{x \in X_k}L(x) )}{\partial \Theta} = \frac{\partial \sum_{x \in X} L(x)}{\partial \Theta} = \frac{\partial L}{\partial \Theta}$
+As needed.
+    2. The computer still need to save the losses of all the examples, to compute the gradient at the end.
 
 """
 
 part2_q4 = r"""
-**Your answer:**
+1. 
+
+A. **pdeudocode:**
+
+$lastResult \gets X$ 
+
+$lastGrad \gets \vec{1}$ 
+
+**For $i \gets 1$  to  $n$:**
+
+$\quad lastGrad \gets lastGrad \cdot f_{i}.derivative(lastResults)$
+
+$\quad lastResults \gets f_{i}(lastResults)$
+
+**EndFor**
+
+return $lastGrad$
+
+**End**
+
+memory complexity = $O(1)$
+
+B. **pdeudocode:**
+
+$results = []$
+
+$reslts[0] \gets X$
+
+**For $i \gets 1$  to  $n$:**
+
+$\quad results[i] \gets f_{i}(results[i-1])$
+
+**EndFor**
+
+$lastGrad \gets \vec{1}$ 
+
+**For $i \gets n-1$  downto  $0$:**
+
+$\quad lastGrad \gets lastGrad \cdot f_{i+1}.derivative(results[i])$
+
+**EndFor**
+
+return $lastGrad$
+
+**End**
+
+If we asume that the results are already given, then:
+
+memory complexity = $O(1)$
+
+else:
+
+memory complexity = $O(n)$
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+2. This technique is based on the assumption that all functions are executed in a queue and not in parallel. It is this assumption that allows us to remember at any moment only a fixed number of gradients. In particular, there is only one input. So, in principle, if we use this technique when there are functions that are executed in parallel, we are not guaranteed to be able to run this algorithm in $O(1)$ memory complexity. However, we can sometimes save memory to some extent.
+
+3. This technique can help us in cases where it is not necessary to remember all the gradients. This can happen, for example, when we only perform finetuning for a limited number of layers, without updating all the other layers. Alternatively, we can use an algorithm to update each layer separately with low memory complexity - but the time complexity in this case would be very high.
+
+
 
 """
 
@@ -215,10 +264,10 @@ part3_q4 = r"""
 **Your answer:**
 
 
-1. analyzing the results by column, we see that for all column (depth=1,2,4) the largest width (depth=32) isn't the best in terms of test accuracy (altough the difference is not significant). this implies that the model with highest width is a little bit too complex as it has higher generalization error than a model with less parameters (width=8). we also see that for all columns a model with width=2 (first row) is too simple as it has lower accuracy both in the validation and test sets. this can also understood by looking at the decision boundary - it is much simpler than the other rows (more "linear")
-2. analyzing by rows we see similiar trend - for all rows (width=2,8,32) the model with depth=1 is too simple (lower results overall, simple decision boundary), the model with depth=4 is a little bit too complex (lower test accuracy) compared toa  model with depth=2.
-3. comparing model with depth=1, width=32 woth model woth depth=4, width=8 we see that the later one is better. one possible explanation is the nonlinearity of the models- Besides having the same number of parameters they have different number of nonlinear activation layers. the model with depth=4 has 4 activation layers while the model with  depth=1 has only 1. In addition, taking into account the fact that each layer is a linear classifier (followed by nonlinear function) it is clear that it's more expressive to combine 4 different linear clasifiers than using 1 bigger linear classifier. This can explain why model with more layers and few hidden parameters is more powerfull the model with few layers and more hidden pararmeters.
-4. the optimal thresould did improved the reuslts on the test set compared to the validation set. the reason for that is that in our case, better model is maximizing both recall and precision (in our case there is no difference between FPR and FNR) so the optimal thresold should improve the model performance. In addition, there is no data shift between the test set and the training/validation set so evaluationg the threshold on the validation set effects the test set in a similiar way. 
+1. analyzing the results by column, we see that for depth=1 the widht that gave the dest results is the lowest one (width=2), for depth=2, the lowest (width=2) and the highest (width=8) gave the same best results and for depth=4 the best one was the model with the highest width (8). only for the last column (depth=4) we see consistency in which increasing the width leads to better results. this implies that for shallow networks, adding more parameters doese not necceseraly improve the performence.
+2. for fixed width and varied depth we see much more consistency - always the best model was the one with the highest number of layers and except one case (width=2) increasing the number of layers always leads to increasing the test accuracy. this implies that adding more layers is more efficient in capturing complex features than adding more paramters (width) for a specific layer.
+3. depth=4, width=8 had better results then depth=1 width=32. this is another proof to what have been written before - for a fixed number of total  parameters,  adding more layers is better than adding width for less layers. the idea behind it is that adding more layers incerase the non-linearity of the model while adding width gives a better approximation per layer. we can think of each layer as a linear function followed by non linearity. increasing the number of layers, meaning increasing the number of linear functions, which gives more expressivense than fine-tunning the linear approximation of each layer.     
+4. the optimal thresould did not improved the reuslts on the test set compared to the validation set. the reason for that is that the optimal threshold can be sensitive to specific dataset. choosing the optimal thershold based on the validation set wouldn't necceseraly be optimal for the test set. it might be that the test set samples distribute differently and that the (true) optimal threshold for the test set would be different.
 
 """
 # ==============
@@ -371,7 +420,7 @@ part6_q3 = r"""
 **Your answer:**
 
 the model shows different drawbacks in each one of the images. the first image shows many many little ducks on the road together with 
-people and cars. the model catches the people baut fail to catch any of the ducks. this might be because they are very small and occluded objects (they masking each other and looks like one big object). it also don't recognize any of the cars at the background. the second image shows a cow licking a cat. this time the model accurately puts bounding boxes and classify the cat but he misclassify the cow as a dog. this might be because of model bias - this scene is not normal and probably most of the images the model was trained on with some animal licking a cat was of dog or another cat. therefore, when the model see a cat licked by another animal, it mistakenly interpert it as a dog (or a cat) where's here its a cow. the third image is very interesting - we see a bear in a camping playing with a stove. the model gives two, almost identically, bounding boxes around the bear one labeld as a bear and the other one (with lower probabilty) as a cat. it is possible that two factors cause the confusion - 
+people and cars. the model catches the people baut fail to catch any of the ducks. this might be because they are very small and occluded objects (they masking each other and looks like one big object). it also don't recognize any of the cars at the background possibly because of hard light conditions. the second image shows a cow licking a cat. this time the model accurately puts bounding boxes and classify the cat but he misclassify the cow as a dog. this might be because of model bias - this scene is not normal and probably most of the images the model was trained on with some animal licking a cat was of dog or another cat. therefore, when the model see a cat licked by another animal, it mistakenly interpert it as a dog (or a cat) where's here its a cow. the third image is very interesting - we see a bear in a camping playing with a stove. the model gives two, almost identically, bounding boxes around the bear one labeld as a bear and the other one (with lower probabilty) as a cat. it is possible that two factors cause the confusion - 
 <br>
 1. the bear's head is down. this is a form of deformation that changes the shape of the bear and makes it harder to classify
 <br>
@@ -384,12 +433,6 @@ the last image is of man and dog in the dark. the model do not recognize the man
 part6_bonus = r"""
 **Your answer:**
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+we did two types of image augmentations - first we did general, automatic augmentation using torchvision autoaugment. this function uses a general augmentation policy defined by IMAGENET dataset. as not all images had brightness issues, and autoaugment change the brightness, we apply this only to images that we suspected to have benefit from brightness adjustment. next, we applied geometrical augmentation on all images. this is did using test time augmentation (tta) funcionality inside YOLOv5. to do that we created a custom YOLO class which overrided the forward_augment method that takes care of the tta proccess. we can see that the results improved a lot by those augmentations - the cars that were not indentified are now identified very well. also the person in the dark now has bounding box (but with the wrong class). another example that was improved is the cat and the dogs - the model now locates the bounding box accurately and classiifed 2 of the animals correctly. to summarize - using simple augmenatations like autoaugment and tta the predictions can improved significantly with zero effort.   
 
 """

@@ -141,6 +141,7 @@ class RMSProp(Optimizer):
         for p, dp in self.params:
             R.append(torch.ones(dp.shape))
         self.R = R
+        self.state = {}
         # ========================
 
     def step(self):
@@ -155,6 +156,7 @@ class RMSProp(Optimizer):
             # average of it's previous gradients. Use it to update the
             # parameters tensor.
             # ====== YOUR CODE: ======
+            
             r = self.R[count]
             new_r = self.decay * r + (1-self.decay) * dp.data**2
             dp.data +=p*self.reg
@@ -162,5 +164,7 @@ class RMSProp(Optimizer):
             p.data -=dp*lr
             new_R.append(new_r.clone())
             count+=1
-            # ========================
+        #     # ========================
         self.R = new_R
+        
+        

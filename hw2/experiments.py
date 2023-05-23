@@ -53,7 +53,7 @@ def mlp_experiment(
     
     n_layers = depth  # number of layers (not including output)
     hidden_dims = width  # number of output dimensions for each hidden layer
-    activation = torch.nn.LeakyReLU(0.05)  # activation function to apply after each hidden layer
+    activation = torch.nn.Tanh()  # activation function to apply after each hidden layer
     out_activation = "softmax"  # activation function to apply at the output layer
     loss_fn = torch.nn.CrossEntropyLoss()  # One of the torch.nn losses
     hp_arch= dict(
@@ -63,8 +63,8 @@ def mlp_experiment(
         out_activation=out_activation,
     )
     
-    lr, weight_decay, momentum = 0.001, 0.001, 0.001  
-    betas = (0.7, 0.99)
+    lr, weight_decay, momentum = 0.01, 0.0001, 0.001  
+    betas = (0.9, 0.99)
     # hp_optim = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, loss_fn=loss_fn)
     hp_optim = dict(lr=lr, weight_decay=weight_decay, betas=betas, loss_fn=loss_fn)
 
