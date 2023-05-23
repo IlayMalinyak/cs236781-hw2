@@ -14,15 +14,16 @@ part1_q1 = r"""
 
 1.A - the shape of the input is 64X1024. the shape of the output is 64X512. the shape of the Jacobian is therefore 64X512x1024 
 <br>
-1.B - the jacobian $\frac{\partial{y}}{\partial{x}}$ is just the weight matrix. since usually the weight matrix is sparse (many weights are zero because of different regularizations during training), the jacobian is sparse. 
+1.B - since this is linear layer, each output element $y_i$ is dot product the $i^{th}$ row of $W$ with x.so for each sample the jacobian $\frac{\partial{y}}{\partial{x}}$ is just the weight matrix. generaly, we cannot assume that the weight matrix is sparse therefore in general the Jacobian would not be sparse, altough there are  cases when using L1 regularization to induce some sparsity of the weight matrix. in this case the jacobian might be sparse. 
 <br>
-1.C - using the chain rule we can calculate the Jacobian vector product instead of fully materialize the Jacobian - since the Jacobian $J$ in this case is $W$  and we need to calculate $\delta X = J \delta Y$ we can just multiply the weight matrix with $\delta Y$ to get the result. 
+1.C - using the chain rule we can calculate the Jacobian vector product instead of fully materialize the Jacobian - since the Jacobian $J$ in this case is $W$  and we need to calculate $\delta X = J \delta Y$ we can just multiply the weight matrix with $\delta Y$ to get the result : $\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y}\frac{\partial Y}{\partial X} = W^T*\delta Y 
+$ 
 <br>
 2.A - now we need to calcualte $\frac{\partial{y}}{\partial{W}}$ we take the derivative of each of the 512 elements $Y_i$ with respect to all 1024X512 elements $W_{ij}$. so for each sample we have 512X1024X512 elements and in total 64X512X1024X512 elements in the full Jacobian. 
 <br>
-2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_i}}{\partial{W_{j,k}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse and is essentially the gradient of each output elements with respect to the corresponding weight row. 
+2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_i}}{\partial{W_{j,k}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse (non zero only for the $i^{th}$ row of $W$) and is essentially the gradient of each output elements with respect to the corresponding weight row. 
 <br>
-2.C - we again don't need to materialize the Jacobian. we can again use the chain rule and multiply the input tensor with $\delta Y$
+2.C - we again don't need to materialize the Jacobian. we can again use the chain rule and multiply product between the input tensor with the scalar loss $\delta Y$
 
 """
 
