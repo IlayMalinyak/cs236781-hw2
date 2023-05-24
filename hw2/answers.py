@@ -96,9 +96,8 @@ part2_q1 = r"""
 
 2. For the training set, the expected pattern was obtained: low-dropout led to better performance according to both indices than high-dropout setting - because dropout is a regularization that limits the model. 
 
-    But for the test set a more complex pattern was obtained: the loss of low-dropout was initially lower but it gradually increased and became higher than the loss of high-dropout (which decreased moderately); But the accuracy of low-dropout remains higher than that of high-dropout throughout the entire training process. It is also surprising to note that the loss of low-dropout increased slightly while its accuracy also increased. According to our interpretation, this pattern reflects the fact that a low-dropout model becomes more equal between examples, i.e. it achieved correct prediction but with low confidence for many examples, and it becomes more equal throughout training, while the high-dropout model achieved superior performances (correct and with high confidence) on a few examples, and in the rest of the examples it was wrong.
-
-    This result was probably caused by the fact that too high a dropout prevented the neurons from dividing different roles between them and thus prevented them from adapting to a variety of samples over time.
+    But for the test set a more complex pattern was obtained: the loss of low-dropout was initially lower but it gradually increased and became higher than the loss of high-dropout (which decreased moderately); But the accuracy of low-dropout remains higher than that of high-dropout throughout the entire training process. It is also surprising to note that the loss of low-dropout increased slightly while its accuracy also increased. According to our interpretation, this pattern reflects the fact that a low-dropout model becomes more variable between examples, i.e. although the average probability for the true label for example was too low to predict correctly, the variance was high enough so that there are relatively high amount of correct predictions. This pattern increased during training (i.e. the average loss increased as well as the its variance) and in general was higher for the low-dropout then the high-dropout, which had lower average loss but also lower loss variance, and therefore lower accuracy.
+    
 """
 
 part2_q2 = r"""
@@ -234,9 +233,11 @@ part3_q1 = r"""
 **Your answer:**
 
 
-1. given the loss graph, the optimization error is not high. this is because we see the training loss decrease smoothly until it reaches a plateau. that implies that the at the end of the optimization proccess the gradients are small and therefore the optimization error is small.
+1. given the loss graph, the optimization error is not high- we can see that the training loss decrease smoothly until it reaches a plateau. that implies that the at the end of the optimization proccess the gradients are small and therefore the optimization error is small. there is a possibility that we reached local minima but since we reached high accuracy and we see a good decision boundary we think this is not the case.
 2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, and don't have a good "decrease" shape. although there is no overfitting (the test loss is not raising), we can say that the generalization error is higher than the optimization error.
-3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes and therefore it is able to approximate the real boundary of the dataset.
+3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes and therefore it is able to approximate the real boundary of the dataset. since the approximation
+error comprised from optimization error and generalization error, we 
+can see from the graphs that both contribute relatively the same to the approxiamtion error (the distance from the test accuracy to the train accuracy is ~ the distance from the train accuracy to 100).  
 
 """
 
@@ -265,9 +266,9 @@ part3_q4 = r"""
 **Your answer:**
 
 
-1. analyzing the results by column, we see that for depth=1 the widht that gave the dest results is the lowest one (width=2), for depth=2, the lowest (width=2) and the highest (width=8) gave the same best results and for depth=4 the best one was the model with the highest width (8). only for the last column (depth=4) we see consistency in which increasing the width leads to better results. this implies that for shallow networks, adding more parameters doese not necceseraly improve the performence.
+1. analyzing the results by column, we see that for depth=1 the width that gave the best results is the lowest one (width=2), for depth=2, the lowest (width=2) and the highest (width=8) gave the same best results and for depth=4 the best one was the model with the highest width (8). only for the last column (depth=4) we see consistency in which increasing the width leads to better results. this implies that for shallow networks, adding more parameters doese not necceseraly improve the performence.
 2. for fixed width and varied depth we see much more consistency - always the best model was the one with the highest number of layers and except one case (width=2) increasing the number of layers always leads to increasing the test accuracy. this implies that adding more layers is more efficient in capturing complex features than adding more paramters (width) for a specific layer.
-3. depth=4, width=8 had better results then depth=1 width=32. this is another proof to what have been written before - for a fixed number of total  parameters,  adding more layers is better than adding width for less layers. the idea behind it is that adding more layers incerase the non-linearity of the model while adding width gives a better approximation per layer. we can think of each layer as a linear function followed by non linearity. increasing the number of layers, meaning increasing the number of linear functions, which gives more expressivense than fine-tunning the linear approximation of each layer.     
+3. depth=4, width=8 had better results then depth=1 width=32. this is another proof to what have been written before - for a fixed number of total  parameters,  adding more layers is better than adding width for less layers. the idea behind it is that adding more layers incerase the non-linearity of the model while adding width gives a better approximation per layer. we can think of each layer as a linear function followed by non linearity. increasing the number of layers, increases the non-linearity of the model much more than increasing the width of a single layer and therefore gives better results.
 4. the optimal thresould did not improved the reuslts on the test set compared to the validation set. the reason for that is that the optimal threshold can be sensitive to specific dataset. choosing the optimal thershold based on the validation set wouldn't necceseraly be optimal for the test set. it might be that the test set samples distribute differently and that the (true) optimal threshold for the test set would be different.
 
 """
@@ -298,9 +299,9 @@ for the regular block we have two layers with kernel 3x3 and 256 input and outpu
 
 2. The bottleneck block requires fewer floating point operations than the regular block. This is because the 1x1 convolutions reduce and then increase the number of channels, allowing for more efficient computation of the subsequent 3x3 convolution. Therefore, the bottleneck block requires fewer computations and has lower computational complexity than the regular block.
 
-3. Spatially within Feature Maps: as both blocks has convolutions with the same kernel size (3x3), both can combine inputs spatially within feature maps by applying the convolution operation. the 1x1 convolution is of no benefit since it has no spatial resolution.
+3. Spatially within Feature Maps: both blocks has convolutions with the same kernel size (3x3) but the regular block has 2 3X3 convolutions while the bottleneck block has only one. this means that the regular block has more spatial resolution and can capture more complex features within the image.
 <br>
-Across Feature Maps: The bottleneck block is better at combining inputs across feature maps because it uses different number of feature maps. the 1x1 convolution is used to reduce at the beginning and increase at the end the number of channels. This allows coarse graining and enables the block to capture more complex features across feature maps.
+Across Feature Maps: from ine hand, the bottleneck block has fewer channels and therefore catches more coarse (high level) features. from the other hand, it has more layers within the block so it can capture more features in total.
 """
 # ==============
 
