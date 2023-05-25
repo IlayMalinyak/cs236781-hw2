@@ -12,16 +12,16 @@ part1_q1 = r"""
 **Your answer:**
 
 
-1.A - the shape of the input is 64X1024. the shape of the output is 64X512. the shape of the Jacobian is therefore 64X512x1024 
+1.A - the shape of the input is 64X1024. the shape of the output is 64X512. the shape of the full Jacobian, when we take the derivative of each element in the output with respect to each element in the input, is 64X512x64X1024 
 <br>
-1.B - since this is linear layer, each output element $y_i$ is dot product the $i^{th}$ row of $W$ with x.so for each sample the jacobian $\frac{\partial{y}}{\partial{x}}$ is just the weight matrix. generaly, we cannot assume that the weight matrix is sparse therefore in general the Jacobian would not be sparse, altough there are  cases when using L1 regularization to induce some sparsity of the weight matrix. in this case the jacobian might be sparse. 
+1.B - since each output element $y_i$ depends only in the corresponding input element $x_i$ (it is the dot product of the $i^{th}$ row of $W$ with $x_i$), for each sample the jacobian $\frac{\partial{y_{i,k}}}{\partial{x_{j,l}}}$ is non zero only for $j=i$ and therefore sparse.
 <br>
 1.C - using the chain rule we can calculate the Jacobian vector product instead of fully materialize the Jacobian - since the Jacobian $J$ in this case is $W$  and we need to calculate $\delta X = J \delta Y$ we can just multiply the weight matrix with $\delta Y$ to get the result : $\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y}\frac{\partial Y}{\partial X} = W^T*\delta Y 
 $ 
 <br>
 2.A - now we need to calcualte $\frac{\partial{y}}{\partial{W}}$ we take the derivative of each of the 512 elements $Y_i$ with respect to all 1024X512 elements $W_{ij}$. so for each sample we have 512X1024X512 elements and in total 64X512X1024X512 elements in the full Jacobian. 
 <br>
-2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_i}}{\partial{W_{j,k}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse (non zero only for the $i^{th}$ row of $W$) and is essentially the gradient of each output elements with respect to the corresponding weight row. 
+2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_{i,k}}}{\partial{W_{j,l}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse (non zero only for the $i^{th}$ row of $W$) and is essentially the gradient of each output elements with respect to the corresponding weight row. 
 <br>
 2.C - we again don't need to materialize the Jacobian. we can again use the chain rule and multiply product between the input tensor with the scalar loss $\delta Y$
 
@@ -435,6 +435,6 @@ the last image is of man and dog in the dark. the model do not recognize the man
 part6_bonus = r"""
 **Your answer:**
 
-we did two types of image augmentations - first we did general, automatic augmentation using torchvision autoaugment. this function uses a general augmentation policy defined by IMAGENET dataset. as not all images had brightness issues, and autoaugment change the brightness, we apply this only to images that we suspected to have benefit from brightness adjustment. next, we applied geometrical augmentation on all images. this is did using test time augmentation (tta) funcionality inside YOLOv5. to do that we created a custom YOLO class which overrided the forward_augment method that takes care of the tta proccess. we can see that the results improved a lot by those augmentations - the cars that were not indentified are now identified very well. also the person in the dark now has bounding box (but with the wrong class). another example that was improved is the cat and the dogs - the model now locates the bounding box accurately and classiifed 2 of the animals correctly. to summarize - using simple augmenatations like autoaugment and tta the predictions can improved significantly with zero effort.   
+we did two types of image augmentations - first we did general, automatic augmentation using torchvision autoaugment. this function uses a general augmentation policy defined by IMAGENET dataset. as autoaugment change the brightnes and not all images had brightness issues, we applied this only to images that we suspected to benefit from brightness adjustment. next, we applied geometrical augmentation on all images. this we done using the Test Time Augmentation (TTA) funcionality inside YOLOv5. to implement that we created a custom YOLO class which overrides the forward_augment method (that takes care of the TTA proccess). we can see that the the broghtness and geometry issues improved a lot by those augmentations - the cars that were not indentified are now identified very well. also the person in the dark now has correct bounding box (but with the wrong class). another example that was improved is the cat and the dogs - the model now locates the bounding box accurately and classiifed 2 of the animals correctly. issues related to model bias (for example cow leaking cat that was identified as a dog) was not affected as expected (this requires fune tuning of the model on new dataset)  to summarize - using simple augmenatations like autoaugment and TTA, we can improve predicitons significantly with almost zero effort.   
 
 """
