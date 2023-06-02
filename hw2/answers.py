@@ -16,14 +16,14 @@ part1_q1 = r"""
 <br>
 1.B - since each output element $y_i$ depends only in the corresponding input element $x_i$ (it is the dot product of the $i^{th}$ row of $W$ with $x_i$), for each sample the jacobian $\frac{\partial{y_{i,k}}}{\partial{x_{j,l}}}$ is non zero only for $j=i$ and therefore sparse.
 <br>
-1.C - using the chain rule we can calculate the Jacobian vector product instead of fully materialize the Jacobian - since the Jacobian $J$ in this case is $W$  and we need to calculate $\delta X = J \delta Y$ we can just multiply the weight matrix with $\delta Y$ to get the result : $\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y}\frac{\partial Y}{\partial X} = W^T*\delta Y 
+1.C - using the chain rule we can calculate the Jacobian vector product instead of fully materialize the Jacobian - since the non zeros elements of the Jacobian, $J$ ,in this case are $W$,  and we need to calculate $\delta X = J \delta Y$ we can just multiply the weight matrix with $\delta Y$ to get the result : $\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y}\frac{\partial Y}{\partial X} = W^T*\delta Y 
 $ 
 <br>
-2.A - now we need to calcualte $\frac{\partial{y}}{\partial{W}}$ we take the derivative of each of the 512 elements $Y_i$ with respect to all 1024X512 elements $W_{ij}$. so for each sample we have 512X1024X512 elements and in total 64X512X1024X512 elements in the full Jacobian. 
+2.A - now we need to calcualte $\frac{\partial{y}}{\partial{W}}$ we take the derivative of each of the 512 elements $Y_i$ with respect to all 512X1024 elements $W_{ij}^T$. so for each sample we have 512X512X1024 elements and in total 64X512X512X1024 elements in the full Jacobian. 
 <br>
-2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_{i,k}}}{\partial{W_{j,l}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse (non zero only for the $i^{th}$ row of $W$) and is essentially the gradient of each output elements with respect to the corresponding weight row. 
+2.B - since each element $Y_i$ is a linear combination of the i'th row of $W$, $\frac{\partial{y_{i,k}}}{\partial{W_{j,l}}} = 0$ for $i \neq j$. this means that the Jacobian is sparse (non zero only for the $i^{th}$ row of $W$). 
 <br>
-2.C - we again don't need to materialize the Jacobian. we can again use the chain rule and multiply product between the input tensor with the scalar loss $\delta Y$
+2.C - we again don't need to materialize the Jacobian. we can again use the chain rule and use the fact that for each sample, the non zero elements of $\frac{\partial L}{\partial y}$ are the inputs of the corresponding sample. we can therefore multiply the input tensor with the scalar loss $\delta Y$
 
 """
 
@@ -31,7 +31,8 @@ part1_q2 = r"""
 **Your answer:**
 
 
-backprop is just a way for efficient calculations of gradients and therefore is it not the only way to perform decent-based optimization and it is not required in a decent-based training. for example, we saw in the tutorial that it is possible to use Forward mode AD instead. (there are also other methods. for example - https://arxiv.org/abs/2202.08587). however, the use of chaine-rule, computational graphs and automatic differentiation makes backprop the method that gives the best trade-off of efficiency and accuracy in a scenario of heavy computations and it is the most used optimization method in the field of deep learning  
+backprop is specific way for efficient calculations of gradients. as such, it is not the only way to perform decent-based optimization and it is not required in a decent-based training.
+ for example, we saw in the tutorial that it is possible to use Forward mode AD instead (for example - https://arxiv.org/abs/2202.08587). however, the use of scalar loss function, chaine-rule, computational graphs and automatic differentiation makes backprop the method that gives the best trade-off of efficiency and accuracy in a scenario of heavy computations and it is the most used method for gradient calculations in the field of deep learning  
 ```
 
 
@@ -92,7 +93,7 @@ part2_q1 = r"""
 
     Indeed, we see, as expected, that the no-dropout performance is best for the training set (and deteriorates as the dropout increases), while for the test set the change is more complex and non-monotonic: the performance for the test set improves slightly with moderate dropout, but at least for the measure of accuracy deteriorates for too high dropout.
 
-    As an example, we can see very clearly how the gap between the loss graph of dropout=0 and the loss graph of dropout=0.4 is getting wider throughout the training both for the trust set and for the test set, but in opposite directions: for the training set the loss of dropout=0.4 is higher, and for the test set the loss of dropout=0 is higher.
+    As an example, we can see very clearly how the gap between the loss graph of dropout=0 and the loss graph of dropout=0.4 is getting wider throughout the training both for the train set and for the test set, but in opposite directions: for the training set the loss of dropout=0.4 is higher, and for the test set the loss of dropout=0 is higher.
 
 2. For the training set, the expected pattern was obtained: low-dropout led to better performance according to both indices than high-dropout setting - because dropout is a regularization that limits the model. 
 
@@ -111,10 +112,13 @@ part2_q3 = r"""
 **Your answer:**
 1. backpropagation is the algorithm that calculates the gradients of all the parameters in the model. Gradient Descent is the algorithm that updates the parameters of the model according to their gradients, and for this purpose it can use the backpropagation algorithm, in the case of a neural network.
 
-2. In GD, the algorithm uses each iteration in the entire training set $X$, and calculates the error and gradients based on it. In contrast, in SGD, the algorithm in each iteration randomly selects a one example $x \in X$, and calculates the error and the gradients based on it.
+2. In GD, the algorithm uses each iteration in the entire training set $X$, and calculates the error and gradients based on it. In contrast, in SGD, the algorithm in each iteration randomly selects one example $x \in X$, and calculates the error and the gradients based on it. \n
+SGD is more memory efficient than GD, because it does not need to save the entire training set in memory. \n
+SGD is also more time efficient than GD, because it does not need to calculate the gradients for the entire training set in each iteration. \n
+SGD might takes more time to converge than GD, because it is more noisy and the gradients are less accurate. \n
 
-3. First SGD is has lower time/space complaxcity than GD, becaus it calculate the gradient only for one example each time.
-Second, since SGD considers a different example at random each time, it can get out of "traps": local minima points that GD cannot get out of.
+3. the points above, suggests that SGD is better and the dataset is very large and it is not practical to calculate GD. this is indeed the case in most real life problem and therefore most of the times SGD is chosen instead of GD. in addition to that, SGD considers a different example at random each time, it can get out of "traps": local minima points that GD cannot get out of.
+another reason is that SGD can serve as an online learning algorithm, which means that it can learn from new examples that are added to the dataset, without the need to retrain the model on the entire dataset (this is also fit to real scenarios).
 
 4. 
     1. Yes, it is:
@@ -234,7 +238,7 @@ part3_q1 = r"""
 
 
 1. given the loss graph, the optimization error is not high- we can see that the training loss decrease smoothly until it reaches a plateau. that implies that the at the end of the optimization proccess the gradients are small and therefore the optimization error is small. there is a possibility that we reached local minima but since we reached high accuracy and we see a good decision boundary we think this is not the case.
-2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, and don't have a good "decrease" shape. although there is no overfitting (the test loss is not raising), we can say that the generalization error is higher than the optimization error.
+2. looking at the test loss we conclude that the genralization error os a little bit high. compare to the train loss , the test loss is much more noisy, don't have a good "decrease" shape and dosent reach the same accuracy. although there is no overfitting (the test loss is not raising), we can say that the generalization error is high.
 3. looking at the decision boundry plot, we can say that the approximation error is not high. the model is able to create the non linear shape that separates the classes and therefore it is able to approximate the real boundary of the dataset. since the approximation
 error comprised from optimization error and generalization error, we 
 can see from the graphs that both contribute relatively the same to the approxiamtion error (the distance from the test accuracy to the train accuracy is ~ the distance from the train accuracy to 100).  
@@ -245,7 +249,10 @@ part3_q2 = r"""
 **Your answer:**
 
 
-for the model we trained at the beginning of the notebook, we expect the validation set to have more FNR than FPR. this is because we can see that the model's decision boundary is over-estimating the area of class 0 (regions that the model marked as class 0 and has points from class 1) i.e the probabilty for the model to classify sample with label 1 as 0 is higher than the opposite case (classifiying sample with label 0 as 1). since those mistakes are False negatives we assuming that the FNR would be higher than FPR. In general, if you know exactily how the data was generated, we can estimate the FNR and FPR based on the model decision boundary.  
+for the model we trained at the beginning of the notebook, we expect the validation set to have more FNR than FPR. this is because, when plotting the data at the beginning of the notebook, we can see  
+that at the overlapping regions there are more negative samples (blue) than positive. 
+as a results, the probabilty for the model to classify sample with label 1 as 0 is higher than the opposite case (classifiying sample with label 0 as 1). since those mistakes are False negatives we assuming that the FNR would be higher than FPR.
+In general, if you know exactily how the data was generated, we can estimate the FNR and FPR based on the model decision boundary.  
 
 """
 
@@ -256,7 +263,8 @@ the "optimal" point on the ROC curve may not be the best choice in this situatio
     
 In scenario 1, where the disease leads to non-lethal symptoms, the cost of a false positive classification (i.e. diagnosing a healthy patient as sick) is high , as it results in a  unnecessary expensive and risky confirmation test. However, the cost of a false negative classification (i.e. failing to diagnose a sick patient) is low, as the symptoms are easy to detect and not dangerous. Therefore, in this scenario, it may be better to choose a classification threshold that maximizes sensitivity (i.e. minimizing false positive) even if it comes at the cost of increased false negative.
 
-In scenario 2, where the disease may lead to high risk of death if not diagnosed early, the cost of a false negative classification is very high, as it may result in delayed treatment and death. Therefore, it may be better to choose a classification threshold that maximizes specificity (i.e. minimizing false positives) even if it comes at the cost of increased false negatives.
+In scenario 2, where the disease may lead to high risk of death if not diagnosed early, the cost of a false negative classification is presumably higher than the risk and expences invovled in the 
+further test, as it may result in delayed treatment and death. Therefore, it may be better to choose a classification threshold that maximizes specificity (i.e. minimizing false negative).
 
 
 """
@@ -269,7 +277,9 @@ part3_q4 = r"""
 1. analyzing the results by column, we see that for depth=1 the width that gave the best results is the lowest one (width=2), for depth=2, the lowest (width=2) and the highest (width=8) gave the same best results and for depth=4 the best one was the model with the highest width (8). only for the last column (depth=4) we see consistency in which increasing the width leads to better results. this implies that for shallow networks, adding more parameters doese not necceseraly improve the performence.
 2. for fixed width and varied depth we see much more consistency - always the best model was the one with the highest number of layers and except one case (width=2) increasing the number of layers always leads to increasing the test accuracy. this implies that adding more layers is more efficient in capturing complex features than adding more paramters (width) for a specific layer.
 3. depth=4, width=8 had better results then depth=1 width=32. this is another proof to what have been written before - for a fixed number of total  parameters,  adding more layers is better than adding width for less layers. the idea behind it is that adding more layers incerase the non-linearity of the model while adding width gives a better approximation per layer. we can think of each layer as a linear function followed by non linearity. increasing the number of layers, increases the non-linearity of the model much more than increasing the width of a single layer and therefore gives better results.
-4. the optimal thresould did not improved the reuslts on the test set compared to the validation set. the reason for that is that the optimal threshold can be sensitive to specific dataset. choosing the optimal thershold based on the validation set wouldn't necceseraly be optimal for the test set. it might be that the test set samples distribute differently and that the (true) optimal threshold for the test set would be different.
+4. in most cases, the optimal thresould did not improved the reuslts on the test set compared to the validation set. the reason for that is that the optimal threshold can be sensitive to specific dataset.
+ altough the validation set represent an independent distiribution and we might expect it to give the same results on the test set (which is also independent),
+ in reality, this is not always the case. therefore, choosing the optimal thershold based on the validation set wouldn't necceseraly be optimal for the test set. it might be that the test set samples distribute differently and that the (true) optimal threshold for the test set would be different.
 
 """
 # ==============
@@ -297,11 +307,11 @@ part4_q1 = r"""
 1. in General, the 1x1 convolution reduce the number of parameters in the bottleneck block. in our case direct calculation gives:
 for the regular block we have two layers with kernel 3x3 and 256 input and output channels that gives (including bias): $(3*3*256+1)*256*2=1180160$  for the bottleneck we have 3 layers. number of parameters is: $(1*1*256+1)*64+ (3*3*64+1)*64 + (1*1*64 + 1)*256=70016$ for the bottleneck. We see that also the bottleneck block has more layers, it has much fewer parameters in total
 
-2. The bottleneck block requires fewer floating point operations than the regular block. This is because the 1x1 convolutions reduce and then increase the number of channels, allowing for more efficient computation of the subsequent 3x3 convolution. Therefore, the bottleneck block requires fewer computations and has lower computational complexity than the regular block.
-
-3. Spatially within Feature Maps: both blocks has convolutions with the same kernel size (3x3) but the regular block has 2 3X3 convolutions while the bottleneck block has only one. this means that the regular block has more spatial resolution and can capture more complex features within the image.
-<br>
-Across Feature Maps: from ine hand, the bottleneck block has fewer channels and therefore catches more coarse (high level) features. from the other hand, it has more layers within the block so it can capture more features in total.
+2. The bottleneck block requires fewer floating point operations than the regular block. the number of floating points operations is linearly related to the spatial dimensions of the image and the paramters of the layer. assuming the same image in both cases, the bottleneck block use less paramters and therefore less FLOPS.
+3. Spatially within Feature Maps: both blocks has convolutions with the same kernel size (3x3) but the regular block has 2 3X3 convolutions (total receptive filed of 5) while the bottleneck block has only one (total receptive field of 3). this means that the regular block has more spatial resolution and can capture more complex features within the image.
+<br
+Across Feature Maps: from one hand, the bottleneck block moves from large to fewer channels and therefore combines coarse (high level) features with fine features. the transition between number of channels (264 to 64) allows it to better combine high level and low level information accross feature maps.
+on the other hand, the regular block has 2 convolutions with the same number of channels (256) and therefore it can capture more complex features within the same feature map.
 """
 # ==============
 
@@ -320,9 +330,9 @@ in the first experiment we tested the effect of varying depth with fixed channel
 when the number of layers keeps growing,
  (above 4 in our case) the loss and accuracy are constant, meaning the gradients are zero. this is vanishing gradients issue that cause 
  the larger models to become non-trainable. vanishing gradient is a problem of large models - since propagating the graidents through many layers
-causes the gradients to become very small and eventually zero. this is because the gradients are multiplied by the weights in each layer, and if the weights are smaller than 1, the gradients will become smaller and smaller.
+causes the gradients to become very small and eventually zero. this is because the gradients are multiplied accross layeres, and if they are smaller (bigger) than 1, the gradients will become smaller (bigger) and smaller (bigger).
     one way to solve this problem is by using batch normalization, which normalizes the input to each layer to have zero mean and unit variance. this allows the gradients to flow through the network without vanishing.
-    another way is by using skip connections, which allow the gradients to flow directly to the lower layers without passing through the upper layers. this also allows the gradients to flow without vanishing.
+    another way is by using skip connections, which allow the gradients to flow directly to the lower layers without passing through the upper layers. this allows the gradients to flow without vanishing.
 
 """
 
@@ -334,10 +344,10 @@ in the second experiment we tested the effect of varying width with fixed depth 
 graphs that for fixed depth, increasing the width results in a minor increase in accuracy (compared to the change we saw in exp1_1
 when we changed the depth). for l=2 the difference between 
 different widths is almost negligble, and for l=4 the difference is a little bit bigger. The effect of increasing the width is
-minor because the number of layers is fixed and therefore the spatial resolution is fixed. this means that the model can't learn more
+minor because the number of layers is fixed and therefore the total receptive field is fixed. this means that the model can't learn more
 complex features, and therefore the effect of increasing the width is minor. moving from l=2 to l=4 reuslts in better 
 preformence for all $K$ (i.e model with l=4 and k=32 is better than model with l=2 and k=128). this implies that depth is more important
-than number of channels.  in addition, we can see that for l=8 we get vanishing. the performence of the best models (l=4) were similiar in both experiments.
+than number of channels.  in addition, we can see that for l=8 we get vanishing gradients. the performence of the best models (l=4) were similiar in both experiments.
 gradients, similiar to what we saw in exp_1_1.  
 """
 
@@ -364,8 +374,7 @@ and the models can be sensitive to the choice of hyperparameters, in order to fu
 efficient method to tune them. we used optuna package which provides an optimization framework for efficient tuning 
 large number of hyper-parameters. we run multiple optimization experiments for a seleceted architectures and small number of epochs
 for both resnet and cnn and based on the results wechose the parameters for the actual experiment.
-on this specific dataset and with the given architectures, we see that the resnet model with the lowerst number of layers converged first. this implies that the dataset is relatively simple and can be learned by simple network. we also see that  
-CNN outperform Resnet (altough the difference is not high and might change with more carefull tuning of hyper-parameters). however, on different CV tasks, usually the depth that Resnet allows was proved to lead to better results than shallow networks.       
+on this specific dataset and with the given architectures, we see that the resnet model with the lowerst number of layers converged first. this implies that the dataset is relatively simple and can be learned by simple network. we also see that CNN outperform Resnet (altough the difference is not high and might change with more carefull tuning of hyper-parameters). however, on different CV tasks, usually the depth that Resnet allows was proved to lead to better results than shallow networks.       
 """
 # ==============
 
@@ -377,28 +386,34 @@ part6_q1 = r"""
 **Your answer:**
 
 
-in generall, the model did not performed well on those pictures. in the first image there are three dolphins.
+1. in generall, the model did not performed well on those pictures. in the first image there are three dolphins.
 the model located on of the bounding box correctly, but the other two bounding boxes are not accurate. the labels is also
 not accurate -  the model interperted the scene
-as persons on a surfboard, and therefore labeled the dolphins as "person" or "surfboard". this implies a bias in the dataset
-the model was trained on - the model was trained on a dataset with many images of persons on surfboards, and therefore when it
-see an object above the water it interpert it as a person on a surfboard.
+as persons on a surfboard, and therefore labeled the dolphins as "person" or "surfboard". 
 in the second image there are three dogs and one cat close to each other. here, the model 
 located 2 bounding boxes over cat and dog together and labeled them as a cat.
-possible reasons for the poor performance are: small number of classes - even when the model located the bounding box correctly,
-it labeled the object not correctly. this is because the model was trained on a dataset with limited number of
-classes (the basic model was trained on COCO dataset which has 80 classes).
-another reason is occulusion - in the second image the cat is occluded by the dog, and the model failed to locate it. 
+this might related to the similarity between those kind of dogs and cats (model bias) and occlusion
+<br> 
+2. possible reasons for the poor performance are:
+<br>
+model bias -on both cases we can assumes the predictions were biased. in the first example - the model might trained on a dataset with many images of persons on surfboards and not many images of flighing dolphins , and therefore when it
+see an object above the water it tend to interpert it as a person on a surfboard.
+in the second example - this type of dogs are similiar to cats which can confuse the model (if it was not trained on many specific exmaples of dogs of this type)
+occolusion - in the second image the cat is occluded by the dogs, and the model failed to locate it.
+light conditions - in the first example, the dolphins are shaded by the sun, which makes them hard to identify.
+another reason is the number of classes the model was trained on - for example, YOLOV5 has no dolphin class.
 <br>
 to resolve those issues we can: 
 <br>
-1. train the model on a dataset with more classes (e.g imagenet) and fine tune it on our dataset.
+1. train the model on a dataset with more variability per class - many instances of the same class in different poses.
 <br>
-2. train the model on a dataset with more variability per class - many instances of the same class in different poses.
+2. train the model with different size of bounding boxes to allow the model better seperate between close objects.
 <br>
-3. train the model with different size of bounding boxes to allow the model better seperate between close objects.
+3. change the number of bounding boxes per grid cell to allow the model to locate more objects in the same grid cell. 
 <br>
-4. change the number of bounding boxes per grid cell to allow the model to locate more objects in the same grid cell. 
+4. train the model on a dataset with more variability in light and geometrical conditions (data augmentations).
+<br>
+5. fine tune the model on a dataset with more classes.
 
 
 """
